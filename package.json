@@ -1,0 +1,37 @@
+{
+  "name": "@oneidentity/safeguard",
+  "version": "1.0.0",
+  "description": "One Identity Safeguard JavaScript SDK",
+  "main": "src/safeguard.js",
+  "directories": {
+    "src": "src"
+  },
+  "scripts": {
+    "test": "mocha --timeout 30000",
+    "dev": "powershell.exe .\\dev.ps1",
+    "build": "powershell.exe .\\build.ps1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OneIdentity/safeguard.js.git"
+  },
+  "keywords": [
+    "One",
+    "Identity",
+    "Safeguard",
+    "Privileged",
+    "Passwords"
+  ],
+  "author": "Rich Gagliano <rich.gagliano@quest.com> (https://www.oneidentity.com/products/one-identity-safeguard-for-privileged-passwords/)",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/OneIdentity/safeguard.js/issues"
+  },
+  "homepage": "https://github.com/OneIdentity/safeguard.js#readme",
+  "dependencies": {
+    "@microsoft/signalr": "^5.0.4",
+    "axios": "^0.21.1",
+    "mocha": "^8.3.2",
+    "ssl-root-cas": "^1.3.1"
+  }
+}

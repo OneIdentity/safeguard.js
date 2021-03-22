@@ -2,11 +2,9 @@ function initialize() {
     /* This example uses the default SafeguardJs.storage which stores sessionStorage to persist authentication information.
      * By writing a new safeguardJs storage class, these authentication values can be stored elsewhere.
      * Further information can be found in the provided samples. */
-    let storage = new SafeguardJs.Storage();
-    let hostName = storage.getHostName();
-    if (hostName)
+    if (SafeguardJs.Storage && SafeguardJs.Storage.getHostName())
     {
-        SafeguardJs.connectRsts(hostName, `${window.location.protocol}//${window.location.host}${window.location.pathname}`, saveConnectionCallback);
+        SafeguardJs.connectRsts(SafeguardJs.Storage.getHostName(), `${window.location.protocol}//${window.location.host}${window.location.pathname}`, saveConnectionCallback);
     }
 }
 
@@ -27,7 +25,7 @@ function createUser(userName, password) {
             'UserName': userName
         };
 
-        connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.POST, 'v3/Users', user, null, null, setPassword, password);
+        connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.POST, 'v3/Users', user, null, null, setPassword, `"${password}"`);
     }
     else {
         dw.log("You must be logged in and provide a user name and password first.");
@@ -46,6 +44,8 @@ function setPassword(results, password) {
 }
 
 function logResults(results) {
+    results = JSON.parse(results);
+
     if (results) {
         dw.log(results);
     }

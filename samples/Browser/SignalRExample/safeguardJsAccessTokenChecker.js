@@ -27,11 +27,11 @@ const SafeguardJsAccessTokenChecker = {
     },
 
     /**
-     * Checks for and stores an access token in the provided storage lcoation. The page is then redirected
+     * Checks for and stores an access token in the provided storage location. The page is then redirected
      * to itself omitting the access token parameter.
      * @param {SafeguardJs.Storage} storage The storage location the access token should be saved to.
      */
-    check(storage = new SafeguardJs.Storage) {
+    check(storage) {
         var token = this.getAccessToken();
         if (token) {
             storage.setAccessToken(token);
@@ -41,4 +41,4 @@ const SafeguardJsAccessTokenChecker = {
 }
 
 // Perform the access token check whenever the script is loaded.
-SafeguardJsAccessTokenChecker.check();
+SafeguardJsAccessTokenChecker.check(SafeguardJs.Storage);

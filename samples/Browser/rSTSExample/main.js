@@ -2,11 +2,9 @@ function initialize() {
     /* This example uses the default SafeguardJs.storage which stores sessionStorage to persist authentication information.
      * By writing a new safeguardJs storage class, these authentication values can be stored elsewhere.
      * Further information can be found in the provided samples. */
-    let storage = new SafeguardJs.Storage();
-    let hostName = storage.getHostName();
-    if (hostName)
+    if (SafeguardJs.Storage && SafeguardJs.Storage.getHostName())
     {
-        SafeguardJs.connectRsts(hostName, `${window.location.protocol}//${window.location.host}${window.location.pathname}`, saveConnectionCallback);
+        SafeguardJs.connectRsts(SafeguardJs.Storage.getHostName(), `${window.location.protocol}//${window.location.host}${window.location.pathname}`, saveConnectionCallback);
     }
 }
 

@@ -6,23 +6,22 @@
     </head>
 
     <body>
-        <h1>rSTS Example</h1>
-        <h3>Example for authenticating against rSTS, and invoking a Safeguard method using safeguard.js</h3><br>
+        <h1>SignalR Example</h1>
+        <h3>Example forregistering to SignalR using safeguard.js</h3><br>
         <label for="sgConnect">Safeguard Address:</label>
         <input type="text" id="sgConnect" name="sgConnect"><br><br>
         <div>
             <button onclick="connectToSafeguard(document.getElementsByName('sgConnect')[0].value)">Connect</button>
             <button onclick="logout()">Logout</button>
         </div><br>
-        <label>(The Safeguard address is only needed to connect. Once connected you do not need to input the address again to "Get Me".)</label><br><br><br>
-        <div id="buttonGetMe">
-            <button onclick="getMe()">Get Me</button>
+        <label>(The Safeguard address is only needed to connect. Once connected you do not need to input the address again to "Register for SignalR events".)</label><br><br><br>
+        <div id="buttonRegisterSignalR">
+            <button onclick="registerSignalR()">Register SignalR</button>
         </div><br>
         <div id="logger"></div>
 
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
         <script src="logger.js"></script>
-        <script src="safeguard.js"></script>
+        <script src="safeguardweb.js"></script>
         <script src="safeguardJsAccessTokenChecker.js"></script>
         <script src="main.js"></script>
     </body>
