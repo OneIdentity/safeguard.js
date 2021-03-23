@@ -1,3 +1,7 @@
+let dw = new DivWriter();
+let connection = null;
+initialize();
+
 function initialize() {
     /* This example uses the default SafeguardJs.storage which stores sessionStorage to persist authentication information.
      * By writing a new safeguardJs storage class, these authentication values can be stored elsewhere.
@@ -26,31 +30,32 @@ function createUser(userName, password) {
         };
 
         connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.POST, 'v3/Users', user, null, null, setPassword, `"${password}"`);
-    }
-    else {
+    } else {
         dw.log("You must be logged in and provide a user name and password first.");
     }
 }
 
-function setPassword(results, password) {
-    let newUser = JSON.parse(results);
-    if (newUser.statusText === "error") {
-        dw.log(results);
-    }
-    else {
+function setPassword(err, results, password) {
+    if (err) {
+        logError(err, 'User creation failed. ');
+    } else {
+        let newUser = JSON.parse(results);
         dw.log(`User '${newUser.UserName}' created with ID: ${newUser.Id}`);
         connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.PUT, `v3/Users/${newUser.Id}/Password`, password, null, null, logResults);
     }
 }
 
-function logResults(results) {
-    results = JSON.parse(results);
+function logResults(err, results) {
+    if (err) {
+        logError(err, `Failed to set the new user's password. `);
+    } else {
+        results = JSON.parse(results);
 
-    if (results) {
-        dw.log(results);
-    }
-    else {
-        dw.log('Password set successfully.');
+        if (results) {
+            dw.log(results);
+        } else {
+            dw.log('Password set successfully.');
+        }
     }
 }
 
@@ -64,6 +69,15 @@ function logoutCallback() {
     connection = null;
 }
 
-let dw = new DivWriter();
-let connection = null;
-initialize();
+function logError(error, message) {
+    try {
+        let obj = JSON.parse(error.message);
+        if (obj.Message) {
+            dw.log(message.concat(obj.Message));
+        } else {
+            dw.log(message.concat(error));
+        }
+    } catch (err) {
+        dw.log(message.concat(error));
+    }
+}

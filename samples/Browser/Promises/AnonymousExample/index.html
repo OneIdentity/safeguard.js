@@ -1,0 +1,22 @@
+<!doctype html>
+
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+    </head>
+
+    <body>
+        <h1>Anonymous Example</h1>
+        <h3>Example for invoking a Safeguard method anonymously using safeguard.js</h3><br>
+        <label for="sgConnect">Safeguard Address:</label>
+        <input type="text" id="sgConnect" name="sgConnect"><br><br><br>
+        <div id="buttonGetMe">
+            <button onclick="getStatus(document.getElementsByName('sgConnect')[0].value)">Get Status</button>
+        </div><br>
+        <div id="logger"></div>
+
+        <script src="logger.js"></script>
+        <script src="safeguardweb.js"></script>
+        <script src="main.js"></script>
+    </body>
+</html>

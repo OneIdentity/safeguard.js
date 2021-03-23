@@ -1,3 +1,7 @@
+let dw = new DivWriter();
+let connection = null;
+initialize();
+
 function initialize() {
     /* This example uses the default SafeguardJs.storage which stores sessionStorage to persist authentication information.
      * By writing a new safeguardJs storage class, these authentication values can be stored elsewhere.
@@ -14,21 +18,20 @@ function connectToSafeguard(hostName) {
     }
 }
 
-function saveConnectionCallback(safeguardConnection) {
-    connection = safeguardConnection;
-}
-
-function getMe() {
+function registerSignalR() {
     if (connection) {
-        connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.GET, 'v3/Me', null, null, null, logMeCallback);
-    }
-    else {
+        connection.registerSignalR(logCallback);
+    } else {
         dw.log("You must log in first.");
     }
 }
 
-function logMeCallback(results) {
-    dw.log(results);
+function saveConnectionCallback(safeguardConnection) {
+    connection = safeguardConnection;
+}
+
+function logCallback(results) {
+    dw.log(`Received SignalR event: ${results.Message}`);
 }
 
 function logout() {
@@ -40,7 +43,3 @@ function logout() {
 function logoutCallback() {
     connection = null;
 }
-
-let dw = new DivWriter();
-let connection = null;
-initialize();

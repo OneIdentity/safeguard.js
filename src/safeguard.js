@@ -59,13 +59,16 @@ const SafeguardJs = {
      * @param {string}              data    String representation of JSON object returned from the
      *                                      Safeguard appliance containing the user token.
      */
-    _saveUserToken: (data) => {
+    _saveUserToken: (err, data) => {
+        if (err) {
+            throw new Error('Failed to save user token.');
+        }
+
         try {
             let obj = JSON.parse(data);
             if (obj.Status === 'Success') {
                 SafeguardJs.Storage.setUserToken(obj.UserToken);
-            }
-            else {
+            } else {
                 throw new Error('Failed to save user token.');
             }
         }
@@ -92,8 +95,7 @@ const SafeguardJs = {
             if (!('accept' in headers)) { headers['accept'] = 'application/json'; }
             if (!('accept-language' in headers)) { headers['accept-language'] = 'en-US,en;q=0.9'; }
             if (!('content-type' in headers)) { headers['content-type'] = 'application/json'; }
-        }
-        else {
+        } else {
             headers = {
                 'accept': 'application/json',
                 'accept-language': 'en-US,en;q=0.9',
@@ -130,23 +132,24 @@ const SafeguardJs = {
             let result = null;
             if (getHeaders) {
                 result = JSON.stringify(response.headers);
-            }
-            else {
+            } else {
                 result = JSON.stringify(response.data);
             }
 
             if (callback) {
-                callback(result, returnData);
+                callback(null, result, returnData);
             }
         })
         .catch(function (error) {
-            result = `Error: ${error.message}`;
+            let result = null;
+            if (error.response && error.response.data) {
+                result = JSON.stringify(error.response.data);
+            } else {
+                result = error.message;
+            }            
             if (callback) {
-                callback(result, returnData);
+                callback(new Error(result), result, returnData);
             }
-        })
-        .then(function () {
-          // always executed
         });
     },
 
@@ -165,10 +168,13 @@ const SafeguardJs = {
      */
     _executePromise: (url, httpMethod, body, type, headers, callback, returnData, httpsAgent = null, getHeaders = false) => {
         return new Promise((resolve, reject) => {
-            SafeguardJs._execute(url, httpMethod, body, type, headers, (data, returnData) => {
+            SafeguardJs._execute(url, httpMethod, body, type, headers, (err, data, returnData) => {
                 if (callback) {
-                    callback(data, returnData);
+                    callback(err, data, returnData);
+                } else if (err) {
+                    reject(err);
                 }
+
                 resolve(data);
             }, returnData, httpsAgent, getHeaders);
         });
@@ -299,17 +305,19 @@ const SafeguardJs = {
         let accessToken = SafeguardJs.Storage.getAccessToken();
 
         if (userToken) {
+            let connection = new SafeguardJs.SafeguardConnection(hostName);
             if (callback) {
-                callback(new SafeguardJs.SafeguardConnection(hostName));
+                callback(connection);                
             }
-        }
-        else if (accessToken) {
+            return connection;
+        } else if (accessToken) {
             SafeguardJs._tradeForUserToken(accessToken, hostName);
+            let connection = new SafeguardJs.SafeguardConnection(hostName);
             if (callback) {
-                callback(new SafeguardJs.SafeguardConnection(hostName));
+                callback(connection);
             }
-        }
-        else {
+            return connection;
+        } else {
             getAccessToken();
         }
     },
@@ -333,10 +341,8 @@ const SafeguardJs = {
             let ca = FS.readFileSync(caFile);
             SafeguardJs.addCA(ca);
             SafeguardJs.CAFiles.push(caFile);
-        }  catch (err) {
-            // Just output the error to the console without actually 
-            // stopping execution.
-            console.error(err);
+        } catch (err) {
+            throw new Error(`Failed to add certificate authority: '${caFile}'`);
         }
     },
 
@@ -357,15 +363,14 @@ const SafeguardJs = {
      * @param {function}            callback    (Optional) The function to call with the resultant SafeguardConnection object.
      * @param {SafeguardJs.Storage} storage     (Optional) The storage location of any authentication information.
      */
-    connectRsts: (hostName, redirect, callback, storage) => {
+    connectRsts: async (hostName, redirect, callback, storage) => {
         if (storage) {
             SafeguardJs.Storage = storage;
-        }
-        else {
+        } else {
             SafeguardJs.Storage = new SS.SessionStorage;   
         }
 
-        SafeguardJs._connectInternal(hostName, callback, () => (SafeguardJs._goToLogin(hostName, redirect)));
+        return SafeguardJs._connectInternal(hostName, callback, () => (SafeguardJs._goToLogin(hostName, redirect)));
     },
 
     /**
@@ -395,8 +400,7 @@ const SafeguardJs = {
 
         if (storage) {
             SafeguardJs.Storage = storage;
-        }
-        else {
+        } else {
             SafeguardJs.Storage = new LS.LocalStorage;   
         }
         SafeguardJs.Storage.clearStorage();
@@ -408,8 +412,8 @@ const SafeguardJs = {
                 "username" : userName,
                 "password" : password,
                 "scope" : `rsts:sts:primaryproviderid:${providerId}`
-              };
-    
+            };
+                          
             let accessToken = await SafeguardJs._executePromise(`https://${hostName}/RSTS/oauth2/token`, SafeguardJs.HttpMethods.POST, bodyData, 'json', null, null, null);
             SafeguardJs.Storage.setAccessToken(JSON.parse(accessToken).access_token);
     
@@ -427,7 +431,7 @@ const SafeguardJs = {
 
             return connection;
         } catch (err) {
-            console.error(err);
+            throw new Error(err.message);
         }
     },
 
@@ -458,8 +462,7 @@ const SafeguardJs = {
         
         if (storage) {
             SafeguardJs.Storage = storage;
-        }
-        else {
+        } else {
             SafeguardJs.Storage = new LS.LocalStorage;   
         }
         SafeguardJs.Storage.clearStorage();
@@ -496,7 +499,7 @@ const SafeguardJs = {
     
             return connection;
         } catch (err) {
-            console.error(err);
+            throw new Error(err.message);
         }
     },
 
@@ -542,8 +545,7 @@ const SafeguardJs = {
     connectAnonymous: (hostName, callback, storage) => {
         if (storage) {
             SafeguardJs.Storage = storage;
-        }
-        else {
+        } else {
             SafeguardJs.Storage = new SS.SessionStorage;
         }
 
@@ -604,7 +606,7 @@ const SafeguardJs = {
     
             return credential;
         } catch (err) {
-            console.error(err);
+            throw new Error(`Failed to retrieve credentials: ${err}`);
         }
     },
 
@@ -669,8 +671,7 @@ const SafeguardJs = {
 
                     relativeUrl = `${relativeUrl}?${encodeGetParams(paramaters)}`;
                 }
-            }
-            catch(ex) {
+            } catch(ex) {
                 throw new Error(`Could not process parameters for call to the ${service} service at endpoint ${relativeUrl}.`);
             }
 
@@ -776,8 +777,7 @@ const SafeguardJs = {
                 let bearerToken = this._getBearerToken();
                 if (additionalHeaders) {
                     additionalHeaders['authorization'] = bearerToken;
-                }
-                else {
+                } else {
                     additionalHeaders = {
                         'authorization': bearerToken
                     }
@@ -785,8 +785,14 @@ const SafeguardJs = {
             }
 
             let url = this._constructUrl(service, relativeUrl, parameters);
-            let result = await SafeguardJs._executePromise(url, httpMethod, body, 'json', additionalHeaders, callback, returnData);
-            return result;
+            
+            try
+            {
+                let result = await SafeguardJs._executePromise(url, httpMethod, body, 'json', additionalHeaders, callback, returnData);
+                return result;
+            } catch (err) {
+                throw new Error(err.message);
+            }
         }
 
         /**
