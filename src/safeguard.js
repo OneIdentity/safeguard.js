@@ -458,6 +458,10 @@ const SafeguardJs = {
             throw new Error('Either a cert and key or pfx are required.');
         }
 
+        if (passphrase == null || passphrase === "") {
+            throw new Error('passphrase may not be null or empty');
+        }
+
         let providerId = await SafeguardJs._getProviderId(hostName, 'certificate', provider);
         
         if (storage) {
@@ -543,6 +547,10 @@ const SafeguardJs = {
      * @param {SafeguardJs.Storage} storage     (Optional) The storage location of any authentication information.
      */
     connectAnonymous: (hostName, callback, storage) => {
+        if (hostName == null || hostName === "") {
+            throw new Error('hostName may not be null or empty');
+        }
+
         if (storage) {
             SafeguardJs.Storage = storage;
         } else {
@@ -572,11 +580,25 @@ const SafeguardJs = {
      * @param {function}            callback    (Optional) The function to call with the resultant a2a password.
      */
      a2aGetCredential: async (hostName, apiKey, type, keyFormat, cert, key, passphrase, callback) => {
-        try {
-            if (!keyFormat) {
-                keyFormat = SafeguardJs.SshKeyFormats.OPENSSH;
-            }
+        if (hostName == null || hostName === "") {
+            throw new Error('hostName may not be null or empty');
+        }
 
+        if (apiKey == null || apiKey === "") {
+            throw new Error('apiKey may not be null or empty');
+        }
+
+        if ((cert == null || cert === "") ||
+            (key == null  || key === "") ||
+            (passphrase == null  || passphrase === "")) {
+            throw new Error('A cert and key must be specified.');
+        }
+
+        if (!keyFormat) {
+            keyFormat = SafeguardJs.SshKeyFormats.OPENSSH;
+        }
+
+        try {
             let httpsAgent = new HTTPS.Agent({
                 cert: cert,
                 key: key,
@@ -622,8 +644,16 @@ const SafeguardJs = {
      * @param {function}            callback    (Optional) The function to call with the resultant a2a password.
      */
       a2aGetCredentialFromFiles: async (hostName, apiKey, type, keyFormat, certFile, keyFile, passphrase, callback) => {
-        let cert = FS.readFileSync(certFile);
-        let key = FS.readFileSync(keyFile);
+        let cert = null;
+        let key = null;  
+
+        if (certFile) {
+            cert = FS.readFileSync(certFile);
+        }
+        
+        if (keyFile) {
+            key = FS.readFileSync(keyFile);
+        }
 
         return await SafeguardJs.a2aGetCredential(hostName, apiKey, type, keyFormat, cert, key, passphrase, callback);
       },

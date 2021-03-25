@@ -16,11 +16,7 @@ describe('ConnectAnonymous', function() {
         assert.strictEqual(localStorage.getHostName(), config.hostName);
         assert.strictEqual(localStorage.getAccessToken(), '');
         assert.strictEqual(localStorage.getUserToken(), '');
-
-        let result = await connection.invoke(sg.Services.NOTIFICATION, sg.HttpMethods.GET, 'v3/Status');
-        if (result.includes('Error')) {
-            assert.fail(result);
-        }
+        await assert.doesNotReject(async () => await connection.invoke(sg.Services.NOTIFICATION, sg.HttpMethods.GET, 'v3/Status'));
     });
 });
 
@@ -42,30 +38,6 @@ describe('ConnectPassword', function() {
         assert.strictEqual(localStorage.getHostName(), config.hostName);
         assert.notStrictEqual(localStorage.getAccessToken(), '');
         assert.notStrictEqual(localStorage.getUserToken(), '');
-    });
-
-    it('ShouldThrowWhenHostNameIsNull', async function() {
-        await assert.rejects(async () => await sg.connectPassword(null, config.passwordUserName, config.passwordPassword));
-    });
-
-    it('ShouldThrowWhenHostNameIsEmpty', async function() {
-        await assert.rejects(async () => await sg.connectPassword('', config.passwordUserName, config.passwordPassword));
-    });
-
-    it('ShouldThrowWhenUserNameIsNull', async function() {
-        await assert.rejects(async () => await sg.connectPassword(config.hostName, null, config.passwordPassword));
-    });
-
-    it('ShouldThrowWhenUserNameIsEmpty', async function() {
-        await assert.rejects(async () => await sg.connectPassword(config.hostName, '', config.passwordPassword));
-    });
-
-    it('ShouldThrowWhenPasswordIsNull', async function() {
-        await assert.rejects(async () => await sg.connectPassword(config.hostName, config.passwordUserName, null));
-    });
-
-    it('ShouldThrowWhenPasswordIsEmpty', async function() {
-        await assert.rejects(async () => await sg.connectPassword(config.hostName, config.passwordUserName, ''));
     });
 });
     
@@ -90,22 +62,6 @@ describe('ConnectCertificate', function() {
         assert.notStrictEqual(localStorage.getAccessToken(), '');
         assert.notStrictEqual(localStorage.getUserToken(), '');
     });
-
-    it('ShouldThrowWhenHostNameIsNull', async function() {
-        await assert.rejects(async () => await sg.connectCertificateFromFiles(null, config.userCertificateFile, config.userCertificateKey, null, config.userCertificatePassphrase));
-    });
-
-    it('ShouldThrowWhenHostNameIsEmpty', async function() {
-        await assert.rejects(async () => await sg.connectCertificateFromFiles('', config.userCertificateFile, config.userCertificateKey, null, config.userCertificatePassphrase));
-    });
-
-    it('ShouldThrowWhenCertsAreAllNull', async function() {
-        await assert.rejects(async () => await sg.connectCertificateFromFiles(config.hostName, null, null, null, config.userCertificatePassphrase));
-    });
-
-    it('ShouldThrowWhenCertsAreAllEmpty', async function() {
-        await assert.rejects(async () => await sg.connectCertificateFromFiles(config.hostName, '', '', '', config.userCertificatePassphrase));
-    });
 });
 
 /*
@@ -113,50 +69,27 @@ describe('ConnectCertificate', function() {
  */
 describe('a2aGetCredentialFiles', function() {
     it('ShouldRetrieveA2APassword', async function() {
-        let result = await sg.a2aGetCredentialFromFiles(config.hostName, config.a2aPasswordApiKey, sg.A2ATypes.PASSWORD, null, config.a2aCertificateFile, config.a2aKeyFile, config.a2aKeyPassphrase);
-        if (result.includes('Error: ')) {
-            assert.fail(result);
-        }
-        assert.ok(result != null || result !== "");
+        await assert.doesNotReject(async () => await sg.a2aGetCredentialFromFiles(config.hostName, config.a2aPasswordApiKey, sg.A2ATypes.PASSWORD, null, config.a2aCertificateFile, config.a2aKeyFile, config.a2aKeyPassphrase));
     });
 
     it('ShouldRetrieveA2ASSHKeyDefault', async function() {
-        let result = await sg.a2aGetCredentialFromFiles(config.hostName, config.a2aSshKeyApiKey, sg.A2ATypes.PRIVATEKEY, null, config.a2aCertificateFile, config.a2aKeyFile, config.a2aKeyPassphrase);
-        if (result.includes('Error: ')) {
-            assert.fail(result);
-        }
-        assert.ok(result != null || result !== "");
+        await assert.doesNotReject(async () => await sg.a2aGetCredentialFromFiles(config.hostName, config.a2aSshKeyApiKey, sg.A2ATypes.PRIVATEKEY, null, config.a2aCertificateFile, config.a2aKeyFile, config.a2aKeyPassphrase));
     });
 
     it('ShouldRetrieveA2ASSHKeyOpenSSH', async function() {
-        let result = await sg.a2aGetCredentialFromFiles(config.hostName, config.a2aSshKeyApiKey, sg.A2ATypes.PRIVATEKEY, sg.SshKeyFormats.OPENSSH, config.a2aCertificateFile, config.a2aKeyFile, config.a2aKeyPassphrase);
-        if (result.includes('Error: ')) {
-            assert.fail(result);
-        }
-        assert.ok(result != null || result !== "");
+        await assert.doesNotReject(async () => await sg.a2aGetCredentialFromFiles(config.hostName, config.a2aSshKeyApiKey, sg.A2ATypes.PRIVATEKEY, sg.SshKeyFormats.OPENSSH, config.a2aCertificateFile, config.a2aKeyFile, config.a2aKeyPassphrase));
     });
 
     it('ShouldRetrieveA2ASSHKeySSH2', async function() {
-        let result = await sg.a2aGetCredentialFromFiles(config.hostName, config.a2aSshKeyApiKey, sg.A2ATypes.PRIVATEKEY, sg.SshKeyFormats.SSH2, config.a2aCertificateFile, config.a2aKeyFile, config.a2aKeyPassphrase);
-        if (result.includes('Error: ')) {
-            assert.fail(result);
-        }
-        assert.ok(result != null || result !== "");
+        await assert.doesNotReject(async () => await sg.a2aGetCredentialFromFiles(config.hostName, config.a2aSshKeyApiKey, sg.A2ATypes.PRIVATEKEY, sg.SshKeyFormats.SSH2, config.a2aCertificateFile, config.a2aKeyFile, config.a2aKeyPassphrase));
     });
 
     it('ShouldRetrieveA2ASSHKeyPutty', async function() {
-        let result = await sg.a2aGetCredentialFromFiles(config.hostName, config.a2aSshKeyApiKey, sg.A2ATypes.PRIVATEKEY, sg.SshKeyFormats.PUTTY, config.a2aCertificateFile, config.a2aKeyFile, config.a2aKeyPassphrase);
-        if (result.includes('Error: ')) {
-            assert.fail(result);
-        }
-        assert.ok(result != null || result !== "");
+        await assert.doesNotReject(async () => await sg.a2aGetCredentialFromFiles(config.hostName, config.a2aSshKeyApiKey, sg.A2ATypes.PRIVATEKEY, sg.SshKeyFormats.PUTTY, config.a2aCertificateFile, config.a2aKeyFile, config.a2aKeyPassphrase));
     });
 
     it('ShouldFailToRetrieveA2ASSHKeyNonsense', async function() {
-        let result = await sg.a2aGetCredentialFromFiles(config.hostName, config.a2aSshKeyApiKey, sg.A2ATypes.PRIVATEKEY, 'nonsense', config.a2aCertificateFile, config.a2aKeyFile, config.a2aKeyPassphrase);
-        if (!result.includes('Error: ')) {
-            assert.fail(result);
-        }
+        await assert.rejects(async () => await sg.a2aGetCredentialFromFiles(config.hostName, config.a2aSshKeyApiKey, 'nonsense', sg.SshKeyFormats.PUTTY, config.a2aCertificateFile, config.a2aKeyFile, config.a2aKeyPassphrase));
     });
 });
 
