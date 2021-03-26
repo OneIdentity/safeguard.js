@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "One Identity Safeguard JavaScript SDK",
   "main": "src/safeguard.js",
+  "browser": {
+    "ssl-root-cas": false
+  },
   "directories": {
     "src": "src"
   },
