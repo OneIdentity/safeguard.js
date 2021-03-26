@@ -9,7 +9,6 @@
   "scripts": {
     "test": "mocha --timeout 30000 test/unitTests.js",
     "integration": "mocha --timeout 30000 test/integrationTests.js",
-    "dev": "powershell.exe .\\dev.ps1",
     "build": "powershell.exe .\\build.ps1"
   },
   "repository": {
