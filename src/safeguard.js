@@ -574,6 +574,7 @@ const SafeguardJs = {
      * @param {string}              hostName    (Required) The name or ip of the safeguard appliance.
      * @param {string}              apiKey      (Required) The a2a api key.
      * @param {string}              type        (Required) The type of credential to retrieve (password, privatekey, etc).
+     * @param {string}              keyFormat   (Optional) The privateKeyFormat to return (openssh, ssh2, putty, etc).
      * @param {string}              cert        (Required) The user certificate in pem format.
      * @param {string}              key         (Required) The user certificate's key in key format.
      * @param {string}              passphrase  (Required) The user certificate's passphrase.
@@ -638,6 +639,7 @@ const SafeguardJs = {
      * @param {string}              hostName    (Required) The name or ip of the safeguard appliance.
      * @param {string}              apiKey      (Required) The a2a api key.
      * @param {string}              type        (Required) The type of credential to retrieve (password, privatekey, etc).
+     * @param {string}              keyFormat   (Optional) The privateKeyFormat to return (openssh, ssh2, putty, etc).
      * @param {string}              certFile    (Required) The user certificate file location in pem format.
      * @param {string}              keyFile     (Required) The user certificate's key file location in key format.
      * @param {string}              passphrase  (Required) The user certificate's passphrase.

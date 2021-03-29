@@ -4,7 +4,7 @@ One Identity Safeguard JavaScript SDK
 -----------
 
 <p align="center">
-<i>Check out our <a href="Samples">sample projects</a> to get started with your own custom integration to Safeguard!</i>
+<i>Check out our <a href="samples">sample projects</a> to get started with your own custom integration to Safeguard!</i>
 </p>
 
 -----------
@@ -39,7 +39,7 @@ This javascript module is published to the [npm registry](https://www.npmjs.com/
 
 ## Getting Started
 
-A simple code example for calling the Safeguard API for authentication through the standard Safeguard Rsts login page:
+A simple code example for calling the Safeguard API for authentication through the standard Safeguard STS login page:
 
 ```JavaScript
 // Browser Example
@@ -132,7 +132,7 @@ SafeguardJs.Storage.setUserToken(apiToken);
 
 Two-factor authentication can only be performed through `connectRsts()`, so that the secure token service can use the browser agent to redirect you to multiple authentication providers.
 
-Most of the examples above use the default SafeguardJs.storage locations. For RSTS and anonymous connections, SessionStorage is used to persist authentication information. For password and certificate authentication, LocalStorage is used, which is an in memory storage. By writing a new SafeguardJs storage class, these authentication values can be stored elsewhere. Further information can be found <a href="src/SessionStorage.js">here</a> for session storage and <a href="src/LocalStorage.js">here</a> for local storage.
+Most of the examples above use the default SafeguardJs.Storage locations. For RSTS and anonymous connections, SessionStorage is used to persist authentication information. For password and certificate authentication, LocalStorage is used, which is an in memory storage. By writing a new SafeguardJs storage class, these authentication values can be stored elsewhere. Further information can be found <a href="src/SessionStorage.js">here</a> for session storage and <a href="src/LocalStorage.js">here</a> for local storage.
 
 ## Getting Started With A2A
 
@@ -143,7 +143,7 @@ To retrieve a password via A2A:
 ```JavaScript
 // Node.JS Example
 SafeguardJs.addCAFromFile('ssl/ca.pem');
-let password = await SafeguardJs.a2aGetCredentialFromFiles('172.21.21.11', 'myapikey', SafeguardJs.A2ATypes.PASSWORD, null, 'ssl/certificateuser.pem', 'ssl/certificateuser.key', 'password');
+let password = await SafeguardJs.a2aGetCredentialFromFiles('safeguard.sample.corp', 'myapikey', SafeguardJs.A2ATypes.PASSWORD, null, 'ssl/certificateuser.pem', 'ssl/certificateuser.key', 'password');
 ```
 
 To retrieve a private key via A2A:
@@ -151,7 +151,7 @@ To retrieve a private key via A2A:
 ```JavaScript
 // Node.JS Example
 SafeguardJs.addCAFromFile('ssl/ca.pem');
-let privateKey = await SafeguardJs.a2aGetCredentialFromFiles('172.21.21.11', 'myapikey', SafeguardJs.A2ATypes.PRIVATEKEY, null, 'ssl/certificateuser.pem', 'ssl/certificateuser.key', 'password');
+let privateKey = await SafeguardJs.a2aGetCredentialFromFiles('safeguard.sample.corp', 'myapikey', SafeguardJs.A2ATypes.PRIVATEKEY, SafeguardJs.SshKeyFormats.OPENSSH, 'ssl/certificateuser.pem', 'ssl/certificateuser.key', 'password');
 ```
 
 ## About the Safeguard API
@@ -198,17 +198,11 @@ SafeguardJs.connectAnonymous('safeguard.sample.corp', saveConnectionCallback)
     connection.invoke(SafeguardJs.Services.NOTIFICATION, SafeguardJs.HttpMethods.GET, 'v3/Status')
     .then((results) => { 
         console.log(results);
-    })
-    .catch((err) => { 
-        console.log(err);
     });
-})
-.catch((err) => { 
-    console.log(err);
 });
 ```
 
-Sample can be found <a href="samples\Node.JS\AnonymousExample.js">here</a>.
+Sample can be found <a href="samples\Node.JS\anonymousExample.js">here</a>.
 
 ```JavaScript
 // Node.JS Example
@@ -221,7 +215,7 @@ console.log(result);
 
 #### Get remaining access token lifetime
 
-Sample can be found <a href="samples\Node.JS\PasswordExample.js">here</a>.
+Sample can be found <a href="samples\Node.JS\passwordExample.js">here</a>.
 
 ```JavaScript
 // Node.JS Example
@@ -262,7 +256,7 @@ await connection.registerSignalR(callback);
 
 #### Create a New User and Set the Password
 
-Sample can be found <a href="Samples\NewUserExample">here</a>.
+Sample can be found <a href="Samples\Browser\Promises\NewUserExample">here</a>.
 
 ```JavaScript
 // Browser Example
