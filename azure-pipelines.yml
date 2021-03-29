@@ -5,8 +5,10 @@ pr:
       - master
       - release-*
    paths:
-    include:
-      - src
+    exclude:
+      - README.md
+      - samples
+      - test
 
 pool:
   vmImage: 'windows-latest'
