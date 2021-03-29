@@ -6,7 +6,7 @@
 trigger:
   branches:
     include:
-- master
+      - master
       - release-*
   paths:
     include:
