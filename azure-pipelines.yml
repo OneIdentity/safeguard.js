@@ -4,10 +4,16 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
 
 trigger:
+  branches:
+    include:
 - master
+      - release-*
+  paths:
+    include:
+      - src
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'windows-latest'
 
 steps:
 - task: NodeTool@0
@@ -19,3 +25,13 @@ steps:
     npm install
     npm run build
   displayName: 'npm install and build'
+
+- script: |
+    npm test
+  displayName: 'npm unit tests'
+
+- task: Npm@1
+  inputs:
+    command: 'publish'
+    workingDir: '/'
+    publishEndpoint: 'safeguard.js service connection'
