@@ -1,13 +1,12 @@
-trigger:
-  branches:
+trigger: none
+pr:
+   branches:
     include:
       - master
       - release-*
   paths:
     include:
       - src
-
-pr: none
 
 pool:
   vmImage: 'windows-latest'
