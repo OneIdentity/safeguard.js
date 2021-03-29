@@ -256,7 +256,7 @@ await connection.registerSignalR(callback);
 
 #### Create a New User and Set the Password
 
-Sample can be found <a href="Samples\Browser\Promises\NewUserExample">here</a>.
+Sample can be found <a href="samples\Browser\Promises\NewUserExample">here</a>.
 
 ```JavaScript
 // Browser Example
