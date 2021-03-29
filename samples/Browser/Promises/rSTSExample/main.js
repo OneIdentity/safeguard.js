@@ -14,7 +14,7 @@ function initialize() {
         })
         .catch((err) => {
             dw.log(`Error: ${err}`);
-        });;
+        });
     }
 }
 

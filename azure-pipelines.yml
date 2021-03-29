@@ -7,9 +7,10 @@ trigger:
   branches:
     include:
       - master
+      - release-*
   paths:
-    exclude:
-      - README.md
+    include:
+      - src
 
 pool:
   vmImage: 'windows-latest'
@@ -24,6 +25,10 @@ steps:
     npm install
     npm run build
   displayName: 'npm install and build'
+
+- script: |
+    npm test
+  displayName: 'npm unit tests'
 
 - task: Npm@1
   inputs:

@@ -14,7 +14,7 @@ function initialize() {
         })
         .catch((err) => {
             dw.log(`Error: ${err}`);
-        });;
+        });
     }
 }
 
@@ -41,7 +41,7 @@ function createUser(userName, password) {
             })
             .catch((err) => {
                 logError(err, `Failed to set the new user's password. `);
-            });;
+            });
         })
         .catch((err) => {
             logError(err, 'User creation failed. ');

@@ -29,43 +29,27 @@ safeguard.js also provides an easy way to call Safeguard A2A from JavaScript. Th
 
 safeguard.js includes an SDK for listening to Safeguard's powerful, real-time event notification system. Safeguard provides role-based event notifications via SignalR to subscribed clients. If a Safeguard user is an Asset Administrator events related to the creation, modification, or deletion of Assets and Asset Accounts will be sent to that user. When used with a certificate user, this provides an opportunity for reacting programmatically to any data modification in Safeguard. Events are also supported for access request workflow and for A2A password changes.
 
-## Getting Started
+## Installation
 
-A simple code example for calling the Safeguard API for authentication through
-the standard Safeguard Rsts login page:
+This javascript module is published to the [npm registry](https://www.npmjs.com/org/oneidentity) to make it as easy as possible to install.
 
-```JavaScript
-// Browser Example
-SafeguardJs.connectRsts('safeguard.sample.corp', `${window.location.protocol}//${window.location.host}${window.location.pathname}`, saveConnectionCallback);
-
-function saveConnectionCallback(safeguardConnection) {
-    let connection = safeguardConnection;
-    connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.GET, 'v3/Me', null, null, null, logMeCallback);
-}
-
-function logMeCallback(results) {
-    console.log(${results});
-}
+```Bash
+> npm install @oneidentity/safeguard
 ```
 
-Authentication is also possible using an existing Safeguard API token:
+## Getting Started
+
+A simple code example for calling the Safeguard API for authentication through the standard Safeguard Rsts login page:
 
 ```JavaScript
 // Browser Example
-let apiToken = GetTokenSomehow();
-let storage = new SafeguardJs.storage;
-storage.setUserToken(apiToken);
-
-SafeguardJs.connectRsts('safeguard.sample.corp', `${window.location.protocol}//${window.location.host}${window.location.pathname}`, saveConnectionCallback);
-
-function saveConnectionCallback(safeguardConnection) {
-    let connection = safeguardConnection;
-    connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.GET, 'v3/Me', null, null, null, logMeCallback);
-}
-
-function logMeCallback(results) {
-    console.log(${results});
-}
+SafeguardJs.connectRsts('safeguard.sample.corp', `${window.location.protocol}//${window.location.host}${window.location.pathname}`)
+.then((connection) => {
+    connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.GET, 'v3/Me')
+    .then((results) => {
+        console.log(results);
+    });
+});
 ```
 
 For Node.JS, password authentication is available:
@@ -74,8 +58,6 @@ For Node.JS, password authentication is available:
 // Node.JS Example
 SafeguardJs.addCAFromFile('ssl/ca.pem');
 let connection = await SafeguardJs.connectPassword('safeguard.sample.corp', 'myuser', 'mypassword');
-let result = await connection.invoke(sg.Services.CORE, sg.HttpMethods.GET, 'v3/Me');
-console.log(result);
 ```
 
 Password authentication to an external provider is as follows:
@@ -84,51 +66,73 @@ Password authentication to an external provider is as follows:
 // Node.JS Example
 SafeguardJs.addCAFromFile('ssl/ca.pem');
 let connection = await SafeguardJs.connectPassword('safeguard.sample.corp', 'myuser', 'mypassword', 'myexternalprovider');
-let result = await connection.invoke(sg.Services.CORE, sg.HttpMethods.GET, 'v3/Me');
-console.log(result);
 ```
-
 
 Client certificate authentication is also available. This can be done either using a PFX certificate file or a PEM and KEY.
 
 ```JavaScript
 // Node.JS Example
 SafeguardJs.addCAFromFile('ssl/ca.pem');
-let connection = await SafeguardJs.connectCertificateFile('safeguard.sample.corp', 'ssl/certificateuser.pem', 'ssl/certificateuser.key', null, 'password');
-let result = await connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.GET, 'v3/Me');
-console.log(result);
+let connection = await SafeguardJs.connectCertificateFromFiles('safeguard.sample.corp', 'ssl/certificateuser.pem', 'ssl/certificateuser.key', null, 'password');
 ```
-
-Client certificate authentication to an external provider is as follows:
 
 ```JavaScript
 // Node.JS Example
 SafeguardJs.addCAFromFile('ssl/ca.pem');
-let connection = await SafeguardJs.connectCertificateFile('safeguard.sample.corp', 'ssl/certificateuser.pem', 'ssl/certificateuser.key', null, 'password', 'myexternalprovider');
-let result = await connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.GET, 'v3/Me');
-console.log(result);
+let connection = await SafeguardJs.connectCertificateFromFiles('safeguard.sample.corp', null, null, 'ssl/certificateuser.pfx', 'password');
+```
+
+Client certificate authentication to an external provider is also available. This can again be done either using a PFX certificate file or a PEM and KEY.
+
+```JavaScript
+// Node.JS Example
+SafeguardJs.addCAFromFile('ssl/ca.pem');
+SafeguardJs.addCAFromFile('ssl/ca2.pem'); // additional CA for external provider
+let connection = await SafeguardJs.connectCertificateFromFiles('safeguard.sample.corp', 'ssl/certificateuser.pem', 'ssl/certificateuser.key', null, 'password', 'myexternalprovider');
+```
+
+```JavaScript
+// Node.JS Example
+SafeguardJs.addCAFromFile('ssl/ca.pem');
+SafeguardJs.addCAFromFile('ssl/ca2.pem'); // additional CA for external provider
+let connection = await SafeguardJs.connectCertificateFromFiles('safeguard.sample.corp', null, null, 'ssl/certificateuser.pfx', 'password', 'myexternalprovider');
 ```
 
 A connection can also be made anonymously 
 
 ```JavaScript
+// Browser Example
+let connection = SafeguardJs.connectAnonymous('safeguard.sample.corp');
+```
+
+```JavaScript
 // Node.JS Example
-SafeguardJs.addCAFromFile('ssl/ca.pem');
+let localStorage = new require('src/LocalStorage').LocalStorage;
+SafeguardJs.addCAFromFile('ca.pem');
 let connection = SafeguardJs.connectAnonymous('safeguard.sample.corp', null, localStorage);
-let result = await connection.invoke(SafeguardJs.Services.NOTIFICATION, SafeguardJs.HttpMethods.GET, 'v3/Status');
-console.log(result);
+```
+
+Authentication is also possible using an existing Safeguard API token:
+
+```JavaScript
+// Browser Example
+let apiToken = GetTokenSomehow();
+let connection = SafeguardJs.connectAnonymous('safeguard.sample.corp');
+SafeguardJs.Storage.setUserToken(apiToken);
+```
+
+```JavaScript
+// Node.JS Example
+let apiToken = GetTokenSomehow();
+let localStorage = new require('src/LocalStorage').LocalStorage;
+
+let connection = SafeguardJs.connectAnonymous('safeguard.sample.corp', null, localStorage);
+SafeguardJs.Storage.setUserToken(apiToken);
 ```
 
 Two-factor authentication can only be performed through `connectRsts()`, so that the secure token service can use the browser agent to redirect you to multiple authentication providers.
 
-All examples above use the default SafeguardJs.storage locations. For RSTS and anonymous connections, SessionStorage is used to persist authentication information. For password and certificate authentication, LocalStorage is used, which is an in memory storage. By writing a new SafeguardJs storage class, these authentication values can be stored
-elsewhere. Further information can be found inline at <a href="src/SessionStorage.js">safeguard.js</a>.
-
-
-Calling the simple 'Me' endpoint provides information about the currently logged
-on user.
-
-Calling the 'Status' endpoint provides gneral status information about the appliance and can be accessed anonymously.
+Most of the examples above use the default SafeguardJs.storage locations. For RSTS and anonymous connections, SessionStorage is used to persist authentication information. For password and certificate authentication, LocalStorage is used, which is an in memory storage. By writing a new SafeguardJs storage class, these authentication values can be stored elsewhere. Further information can be found <a href="src/SessionStorage.js">here</a> for session storage and <a href="src/LocalStorage.js">here</a> for local storage.
 
 ## Getting Started With A2A
 
@@ -139,7 +143,7 @@ To retrieve a password via A2A:
 ```JavaScript
 // Node.JS Example
 SafeguardJs.addCAFromFile('ssl/ca.pem');
-let password = await SafeguardJs.a2aGetCredentialFiles('172.21.21.11', 'myapikey', SafeguardJs.A2ATypes.PASSWORD, null, 'ssl/certificateuser.pem', 'ssl/certificateuser.key', 'password', 'ssl/hyperv.local.CA.pem');
+let password = await SafeguardJs.a2aGetCredentialFromFiles('172.21.21.11', 'myapikey', SafeguardJs.A2ATypes.PASSWORD, null, 'ssl/certificateuser.pem', 'ssl/certificateuser.key', 'password');
 ```
 
 To retrieve a private key via A2A:
@@ -147,7 +151,7 @@ To retrieve a private key via A2A:
 ```JavaScript
 // Node.JS Example
 SafeguardJs.addCAFromFile('ssl/ca.pem');
-let privateKey = await SafeguardJs.a2aGetCredentialFiles('172.21.21.11', 'myapikey', SafeguardJs.A2ATypes.PRIVATEKEY, null, 'ssl/certificateuser.pem', 'ssl/certificateuser.key', 'password', 'ssl/hyperv.local.CA.pem');
+let privateKey = await SafeguardJs.a2aGetCredentialFromFiles('172.21.21.11', 'myapikey', SafeguardJs.A2ATypes.PRIVATEKEY, null, 'ssl/certificateuser.pem', 'ssl/certificateuser.key', 'password');
 ```
 
 ## About the Safeguard API
@@ -185,20 +189,75 @@ provides read-only information for status, etc.
 
 #### Anonymous Call for Safeguard Status
 
-Sample can be found <a href="Samples\AnonymousExample">here</a>.
+Sample can be found <a href="samples\Browser\Promises\AnonymousExample">here</a>.
 
 ```JavaScript
 // Browser Example
-SafeguardJs.connectAnonymous('safeguard.sample.corp', saveConnectionCallback);
+SafeguardJs.connectAnonymous('safeguard.sample.corp', saveConnectionCallback)
+.then((connection) => { 
+    connection.invoke(SafeguardJs.Services.NOTIFICATION, SafeguardJs.HttpMethods.GET, 'v3/Status')
+    .then((results) => { 
+        console.log(results);
+    })
+    .catch((err) => { 
+        console.log(err);
+    });
+})
+.catch((err) => { 
+    console.log(err);
+});
+```
 
-function saveConnectionCallback(safeguardConnection) {
-    let connection = safeguardConnection;
-    connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.GET, 'v3/Me', null, null, null, logMeCallback);
+Sample can be found <a href="samples\Node.JS\AnonymousExample.js">here</a>.
+
+```JavaScript
+// Node.JS Example
+let localStorage = new require('src/LocalStorage').LocalStorage;
+SafeguardJs.addCAFromFile(caFile);
+let connection = await SafeguardJs.connectAnonymous(hostName, null, localStorage);
+let result = await connection.invoke(SafeguardJs.Services.NOTIFICATION, SafeguardJs.HttpMethods.GET, 'v3/Status');
+console.log(result);
+```
+
+#### Get remaining access token lifetime
+
+Sample can be found <a href="samples\Node.JS\PasswordExample.js">here</a>.
+
+```JavaScript
+// Node.JS Example
+SafeguardJs.addCAFromFile('ssl/ca.pem');
+let connection = await SafeguardJs.connectPassword('safeguard.sample.corp', 'myuser', 'mypassword');
+let result = await connection.getAccessTokenLifetimeRemaining();
+console.log(result);
+```
+
+#### Register for SignalR events
+
+Sample can be found <a href="samples\Browser\Promises\SignalRExample">here</a>.
+
+```JavaScript
+// Browser Example
+function callback(ev) {
+    console.log(`Received SignalR event: ${ev.Message}`);
 }
 
-function logMeCallback(results) {
-    console.log(${results});
+SafeguardJs.connectRsts('safeguard.sample.corp', `${window.location.protocol}//${window.location.host}${window.location.pathname}`)
+.then((connection) => {
+    connection.registerSignalR(logCallback);
+});
+```
+
+Sample can be found <a href="samples\Node.JS\signalRExample.js">here</a>.
+
+```JavaScript
+// Node.JS Example
+function callback(ev) {
+    console.log(`Received SignalR event: ${ev.Message}`);
 }
+
+SafeguardJs.addCAFromFile('ssl/ca.pem');
+let connection = await SafeguardJs.connectPassword('safeguard.sample.corp', 'myuser', 'mypassword');
+await connection.registerSignalR(callback);
 ```
 
 #### Create a New User and Set the Password
@@ -213,10 +272,12 @@ let user = {
 };
 let password = 'MyNewUser123';
 
-connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.POST, 'v3/Users', user, null, null, setPassword, password);
-
-function setPassword(results, password) {
-    let newUser = JSON.parse(results);
-    connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.PUT, `v3/Users/${newUser.Id}/Password`, password, null, null, logResults);
-}
+SafeguardJs.connectRsts('safeguard.sample.corp', `${window.location.protocol}//${window.location.host}${window.location.pathname}`)
+.then((connection) => {
+    connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.POST, 'v3/Users', user)
+    .then((results) => {
+        let newUser = JSON.parse(results);
+        connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.PUT, `v3/Users/${newUser.Id}/Password`, `"${password}"`);
+    });
+});
 ```
