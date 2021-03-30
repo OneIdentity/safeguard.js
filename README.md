@@ -31,7 +31,7 @@ safeguard.js includes an SDK for listening to Safeguard's powerful, real-time ev
 
 ## Installation
 
-This javascript module is published to the [npm registry](https://www.npmjs.com/org/oneidentity) to make it as easy as possible to install.
+This javascript module is published to the [npm registry](https://www.npmjs.com/package/@oneidentity/safeguard) to make it as easy as possible to install.
 
 ```Bash
 > npm install @oneidentity/safeguard
