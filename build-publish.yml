@@ -28,5 +28,4 @@ steps:
 - task: Npm@1
   inputs:
     command: 'publish'
-    workingDir: '/'
     publishEndpoint: 'safeguard.js service connection'
