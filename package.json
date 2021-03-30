@@ -1,14 +1,14 @@
 {
   "name": "@oneidentity/safeguard",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "One Identity Safeguard JavaScript SDK",
   "main": "src/safeguard.js",
   "browser": {
     "ssl-root-cas": false
   },
-  "directories": {
-    "src": "src"
-  },
+  "files": [
+    "src"
+  ],
   "scripts": {
     "test": "mocha --timeout 30000 test/unitTests.js",
     "integration": "mocha --timeout 30000 test/integrationTests.js",
