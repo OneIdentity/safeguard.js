@@ -611,7 +611,7 @@ const SafeguardJs = {
                 'authorization': `A2A ${apiKey}`
             }
 
-            let credential = await SafeguardJs._executePromise(`https://${hostName}/service/a2a/v2/Credentials?type=${type}&keyFormat=${keyFormat}`, SafeguardJs.HttpMethods.GET, null, 'json', additionalHeaders, null, null, httpsAgent);
+            let credential = await SafeguardJs._executePromise(`https://${hostName}/service/a2a/v3/Credentials?type=${type}&keyFormat=${keyFormat}`, SafeguardJs.HttpMethods.GET, null, 'json', additionalHeaders, null, null, httpsAgent);
             
             // Remove any leading or trailing quotes that were added from string conversion
             if (credential.slice(0, 1) === '"') {
