@@ -1,6 +1,6 @@
 {
   "name": "@oneidentity/safeguard",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "One Identity Safeguard JavaScript SDK",
   "main": "src/safeguard.js",
   "browser": {
@@ -25,7 +25,7 @@
     "Privileged",
     "Passwords"
   ],
-  "author": "Rich Gagliano <rich.gagliano@quest.com> (https://www.oneidentity.com/products/one-identity-safeguard-for-privileged-passwords/)",
+  "author": "Safeguard DevOps <safeguard-devops@groups.quest.com> (https://www.oneidentity.com/products/one-identity-safeguard-for-privileged-passwords/)",
   "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/OneIdentity/safeguard.js/issues"
