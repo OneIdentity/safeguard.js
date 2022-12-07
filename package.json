@@ -1,6 +1,6 @@
 {
   "name": "@oneidentity/safeguard",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "One Identity Safeguard JavaScript SDK",
   "main": "src/safeguard.js",
   "browser": {
