@@ -1,3 +1,7 @@
+variables:
+  - name: isPrerelease
+    value: ${{ true }}
+
 trigger:
   branches:
     include:
@@ -29,3 +33,4 @@ steps:
   inputs:
     command: 'publish'
     publishEndpoint: 'safeguard.js service connection'
+  condition: eq( variables.isPrerelease, false )
