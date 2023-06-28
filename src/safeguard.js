@@ -284,7 +284,7 @@ const SafeguardJs = {
     /**
      * (Internal) Contacts the safeguard appliance to trade an access token for a user token.
      *
-     * @param {string}  ccessToken The access token to trade.
+     * @param {string}  accessToken The access token to trade.
      * @param {string}  hostName    The name or ip of the safeguard appliance.
      */
     _tradeForUserToken: (accessToken, hostName) => {
