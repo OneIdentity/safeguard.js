@@ -29,7 +29,7 @@ function createUser(userName, password) {
             'UserName': userName
         };
 
-        connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.POST, 'v3/Users', user, null, null, setPassword, `"${password}"`);
+        connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.POST, 'v4/Users', user, null, null, setPassword, `"${password}"`);
     } else {
         dw.log("You must be logged in and provide a user name and password first.");
     }
@@ -41,7 +41,7 @@ function setPassword(err, results, password) {
     } else {
         let newUser = JSON.parse(results);
         dw.log(`User '${newUser.UserName}' created with ID: ${newUser.Id}`);
-        connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.PUT, `v3/Users/${newUser.Id}/Password`, password, null, null, logResults);
+        connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.PUT, `v4/Users/${newUser.Id}/Password`, password, null, null, logResults);
     }
 }
 

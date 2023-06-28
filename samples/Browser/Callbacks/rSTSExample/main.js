@@ -24,7 +24,7 @@ function saveConnectionCallback(safeguardConnection) {
 
 function getMe() {
     if (connection) {
-        connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.GET, 'v3/Me', null, null, null, logMeCallback);
+        connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.GET, 'v4/Me', null, null, null, logMeCallback);
     } else {
         dw.log("You must log in first.");
     }

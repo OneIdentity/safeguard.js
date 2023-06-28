@@ -89,7 +89,7 @@ describe('LocalStorage', function() {
  */
 describe('SafeguardConnection', function() {
     let hostName = 'exampleHostName.local';
-    let relativeUrl = 'v3/something';
+    let relativeUrl = 'v4/something';
 
     it('ShouldHaveHostNameAfterInitialization', function() {
         let connection = new sg.SafeguardConnection(hostName);
@@ -161,22 +161,22 @@ describe('SafeguardConnection', function() {
 
     it('ShouldThrowOnInvokeWhenServiceIsNull', async function() {
         let connection = new sg.SafeguardConnection(hostName);
-        await assert.rejects(async () => await connection.invoke(null, sg.HttpMethods.GET, 'v3/Me'));
+        await assert.rejects(async () => await connection.invoke(null, sg.HttpMethods.GET, 'v4/Me'));
     });
 
     it('ShouldThrowOnInvokeWhenServiceIsEmpty', async function() {
         let connection = new sg.SafeguardConnection(hostName);
-        await assert.rejects(async () => await connection.invoke('', sg.HttpMethods.GET, 'v3/Me'));
+        await assert.rejects(async () => await connection.invoke('', sg.HttpMethods.GET, 'v4/Me'));
     });
 
     it('ShouldThrowOnInvokeWhenHttpMethodIsNull', async function() {
         let connection = new sg.SafeguardConnection(hostName);
-        await assert.rejects(async () => await connection.invoke(sg.Services.CORE, null, 'v3/Me'));
+        await assert.rejects(async () => await connection.invoke(sg.Services.CORE, null, 'v4/Me'));
     });
 
     it('ShouldThrowOnInvokeWhenHttpMethodIsEmpty', async function() {
         let connection = new sg.SafeguardConnection(hostName);
-        await assert.rejects(async () => await connection.invoke(sg.Services.CORE, '', 'v3/Me'));
+        await assert.rejects(async () => await connection.invoke(sg.Services.CORE, '', 'v4/Me'));
     });
 
     it('ShouldThrowOnInvokeWhenRelativeUrlIsNull', async function() {

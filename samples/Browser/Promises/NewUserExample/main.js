@@ -31,11 +31,11 @@ function createUser(userName, password) {
             'UserName': userName
         };
 
-        connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.POST, 'v3/Users', user)
+        connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.POST, 'v4/Users', user)
         .then((results) => {
             let newUser = JSON.parse(results);
             dw.log(`User '${newUser.UserName}' created with ID: ${newUser.Id}`);
-            connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.PUT, `v3/Users/${newUser.Id}/Password`, `"${password}"`)
+            connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.PUT, `v4/Users/${newUser.Id}/Password`, `"${password}"`)
             .then(() => {
                 dw.log('Password set successfully.');
             })

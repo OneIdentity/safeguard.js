@@ -26,7 +26,7 @@ function connectToSafeguard(hostName) {
 
 function getMe() {
     if (connection) {
-        connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.GET, 'v3/Me')
+        connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.GET, 'v4/Me')
         .then((results) => {
             dw.log(results);
         })

@@ -4,6 +4,7 @@ const AXIOS = require('axios');
 const HTTPS = require('https');
 const LS = require('./LocalStorage');
 const SS = require('./SessionStorage');
+const CryptoJS = require('crypto-js');
 
 /**
  *  SafeguardJs
@@ -74,6 +75,30 @@ const SafeguardJs = {
         }
         catch(ex) {
             throw new Error('Failed to save user token.');
+        }
+    },
+
+    /**
+     * (Internal) Saves the access token to storage.
+     *
+     * @param {string}              data    String representation of JSON object returned from the
+     *                                      Safeguard appliance containing the access token.
+     */
+    _saveAccessToken: (err, data) => {
+        if (err) {
+            throw new Error('Failed to save access token.');
+        }
+
+        try {
+            let obj = JSON.parse(data);
+            if (obj.success) {
+                SafeguardJs.Storage.setAccessToken(obj.access_token);
+            } else {
+                throw new Error('Failed to save access token.');
+            }
+        }
+        catch(ex) {
+            throw new Error('Failed to save access token.');
         }
     },
 
@@ -191,35 +216,19 @@ const SafeguardJs = {
         if (provider == null || provider === "" || provider.toUpperCase() == "LOCAL" || provider.toUpperCase() == "CERTIFICATE") {
             return defaultProvider;
         }
-        
-        let headers = {
-            "accept": "application/json",
-            "content-type": "application/x-www-form-urlencoded"
-        }
 
-        let bodyData = {
-            "RelayState" : ""
-        };
+        let results = null;
 
-        let result = null;
-
-        try
-        {
-            result = await SafeguardJs._executePromise(`https://${hostName}/RSTS/UserLogin/LoginController?response_type=token&redirect_uri=urn:InstalledApplication&loginRequestStep=1`, SafeguardJs.HttpMethods.POST, bodyData, 'json', headers);
-            result = JSON.parse(result);
+        try {
+            results = await SafeguardJs._executePromise(`https://${hostName}/service/core/v4/AuthenticationProviders`, SafeguardJs.HttpMethods.GET, null, 'json', null, null, null);
+            results = JSON.parse(results);
         } catch (err) {
-            try {
-                // Retry as a GET
-                result = await SafeguardJs._executePromise(`https://${hostName}/RSTS/UserLogin/LoginController?response_type=token&redirect_uri=urn:InstalledApplication&loginRequestStep=1`, SafeguardJs.HttpMethods.GET, bodyData, 'json', headers);
-                result = JSON.parse(result);
-            } catch (err) {
-                throw new Error(`Could not find the provider: '${provider}'. ${err}`);
-            }
+            throw new Error(`Could not find the provider: '${provider}'. ${err}`);
         }
 
         try {
-            for (const p of result.Providers) {
-                if (provider.toUpperCase() == p.DisplayName.toUpperCase()) {
+            for (const p of results) {
+                if (provider.toUpperCase() == p.Name.toUpperCase()) {
                     return p.Id;
                 } else if (provider.toUpperCase() == p.Id.toUpperCase()) {
                     return p.Id;
@@ -234,6 +243,18 @@ const SafeguardJs = {
         throw new Error(`Could not find the provider: '${provider}'`);
     },
 
+    oAuthCodeVerifier: () => {
+        return SafeguardJs.toBase64Url(CryptoJS.lib.WordArray.random(30));
+    },
+    
+    oAuthCodeChallenge: (codeVerifier) => {
+        return SafeguardJs.toBase64Url(CryptoJS.SHA256(codeVerifier));
+    },
+    
+    toBase64Url: (data) => {
+        return CryptoJS.enc.Base64.stringify(data).replace(/[=]/gi, '').replace(/[+]/gi, '-').replace(/[/]/gi, '_');
+    },
+
     /**
      * (Internal) Gets the RSTS URL with a given redirect.
      *
@@ -241,14 +262,20 @@ const SafeguardJs = {
      * @param {string} redirectTo   The redirect URL to be used after successful authentication.
      */
     _loginUrl: (hostName, redirectTo) => {
-        return `https://${hostName}/RSTS/Login?response_type=token&redirect_uri=${encodeURIComponent(redirectTo)}`;
+        var codeVerifier = SafeguardJs.oAuthCodeVerifier();
+        var randomState = SafeguardJs.oAuthCodeVerifier();
+
+        SafeguardJs.Storage.setCodeVerifier(codeVerifier);
+        SafeguardJs.Storage.setRandomState(randomState);
+
+        return `https://${hostName}/RSTS/Login?response_type=code&code_challenge_method=S256&code_challenge=${SafeguardJs.oAuthCodeChallenge(codeVerifier)}&state=${randomState}&redirect_uri=${encodeURIComponent(redirectTo)}`;
     },
 
     /**
      * (Internal) Redirects the current window to the login page.
      *
-     * @param {string} hostName     The name or ip of the safeguard appliance.
-     * @param {string} redirectTo   The redirect URL to be used after successful authentication.
+     * @param {string}  hostName     The name or ip of the safeguard appliance.
+     * @param {string}  redirectTo   The redirect URL to be used after successful authentication.
      */
     _goToLogin: (hostName, redirectTo) => {
         window.location = SafeguardJs._loginUrl(hostName, redirectTo);
@@ -257,16 +284,37 @@ const SafeguardJs = {
     /**
      * (Internal) Contacts the safeguard appliance to trade an access token for a user token.
      *
-     * @param {string}              accessToken The access token to trade.
-     * @param {string}              hostName    The name or ip of the safeguard appliance.
+     * @param {string}  accessToken The access token to trade.
+     * @param {string}  hostName    The name or ip of the safeguard appliance.
      */
     _tradeForUserToken: (accessToken, hostName) => {
-        let url = `https://${hostName}/service/core/v3/Token/LoginResponse`;
+        let url = `https://${hostName}/service/core/v4/Token/LoginResponse`;
         body = {
             "StsAccessToken" : accessToken
         }
 
-        SafeguardJs._executePromise(url, SafeguardJs.HttpMethods.POST, body, 'json', null, SafeguardJs._saveUserToken);
+        return SafeguardJs._executePromise(url, SafeguardJs.HttpMethods.POST, body, 'json', null, SafeguardJs._saveUserToken);
+    },
+
+    /**
+     * (Internal) Contacts the rsts to trade a code for an access token.
+     *
+     * @param {string}  code            The code to trade.
+     * @param {string}  codeVerifier    The code verifier.
+     * @param {string}  hostName        The name or ip of the safeguard appliance.
+     */
+    _tradeForAccessToken: (code, codeVerifier, hostName) => {
+        let url = `https://${hostName}/RSTS/oauth2/token`;
+        body = new URLSearchParams({
+            grant_type: "authorization_code",
+            code: code,
+            code_verifier: codeVerifier
+        });
+        let headers = {
+            "content-type": "application/x-www-form-urlencoded"
+        }
+
+        return SafeguardJs._executePromise(url, SafeguardJs.HttpMethods.POST, body, 'json', headers, SafeguardJs._saveAccessToken);
     },
 
     /**
@@ -303,6 +351,8 @@ const SafeguardJs = {
 
         let userToken = SafeguardJs.Storage.getUserToken();
         let accessToken = SafeguardJs.Storage.getAccessToken();
+        let code = SafeguardJs.Storage.getCode();
+        let state = SafeguardJs.Storage.getState();
 
         if (userToken) {
             let connection = new SafeguardJs.SafeguardConnection(hostName);
@@ -310,6 +360,7 @@ const SafeguardJs = {
                 callback(connection);                
             }
             return connection;
+
         } else if (accessToken) {
             SafeguardJs._tradeForUserToken(accessToken, hostName);
             let connection = new SafeguardJs.SafeguardConnection(hostName);
@@ -317,6 +368,25 @@ const SafeguardJs = {
                 callback(connection);
             }
             return connection;
+
+        } else if (code && state) {
+            let codeVerifier = SafeguardJs.Storage.getCodeVerifier();
+            let randomState = SafeguardJs.Storage.getRandomState();
+
+            SafeguardJs.Storage.clearPKCEStorage();
+
+            if (state == randomState) {
+                SafeguardJs._tradeForAccessToken(code, codeVerifier, hostName)
+                .then(() => {
+                    accessToken = SafeguardJs.Storage.getAccessToken();
+                    SafeguardJs._tradeForUserToken(accessToken, hostName);
+                    let connection = new SafeguardJs.SafeguardConnection(hostName);
+                    if (callback) {
+                        callback(connection);
+                    }
+                    return connection;
+                });
+            }
         } else {
             getAccessToken();
         }
@@ -421,7 +491,7 @@ const SafeguardJs = {
                 "StsAccessToken" : SafeguardJs.Storage.getAccessToken()
               };
     
-            let stsToken = await SafeguardJs._executePromise(`https://${hostName}/service/core/v3/Token/LoginResponse`, SafeguardJs.HttpMethods.POST, bodyData, 'json', null, null, null);
+            let stsToken = await SafeguardJs._executePromise(`https://${hostName}/service/core/v4/Token/LoginResponse`, SafeguardJs.HttpMethods.POST, bodyData, 'json', null, null, null);
             SafeguardJs.Storage.setUserToken(JSON.parse(stsToken).UserToken);
             
             let connection = new SafeguardJs.SafeguardConnection(hostName);
@@ -493,7 +563,7 @@ const SafeguardJs = {
                 "StsAccessToken" : SafeguardJs.Storage.getAccessToken()
               };
     
-            let stsToken = await SafeguardJs._executePromise(`https://${hostName}/service/core/v3/Token/LoginResponse`, SafeguardJs.HttpMethods.POST, bodyData, 'json');
+            let stsToken = await SafeguardJs._executePromise(`https://${hostName}/service/core/v4/Token/LoginResponse`, SafeguardJs.HttpMethods.POST, bodyData, 'json');
             SafeguardJs.Storage.setUserToken(JSON.parse(stsToken).UserToken);
             
             let connection = new SafeguardJs.SafeguardConnection(hostName);
@@ -611,7 +681,7 @@ const SafeguardJs = {
                 'authorization': `A2A ${apiKey}`
             }
 
-            let credential = await SafeguardJs._executePromise(`https://${hostName}/service/a2a/v3/Credentials?type=${type}&keyFormat=${keyFormat}`, SafeguardJs.HttpMethods.GET, null, 'json', additionalHeaders, null, null, httpsAgent);
+            let credential = await SafeguardJs._executePromise(`https://${hostName}/service/a2a/v4/Credentials?type=${type}&keyFormat=${keyFormat}`, SafeguardJs.HttpMethods.GET, null, 'json', additionalHeaders, null, null, httpsAgent);
             
             // Remove any leading or trailing quotes that were added from string conversion
             if (credential.slice(0, 1) === '"') {
@@ -711,19 +781,14 @@ const SafeguardJs = {
             switch(service) {
                 case SafeguardJs.Services.CORE:
                     return `${baseUrl}core/${relativeUrl}`;
-                    break;
                 case SafeguardJs.Services.APPLIANCE:
                     return `${baseUrl}appliance/${relativeUrl}`;
-                    break;
                 case SafeguardJs.Services.NOTIFICATION:
                     return `${baseUrl}notification/${relativeUrl}`;
-                    break;
                 case SafeguardJs.Services.A2A:
                     return `${baseUrl}a2a/${relativeUrl}`;
-                    break;
                 default:
                     throw new Error(`Unsupported service requested: '${service}'.`);
-                    break;
             }
         }
 
@@ -748,7 +813,7 @@ const SafeguardJs = {
          */
         async getAccessTokenLifetimeRemaining(callback) {
             let bearerToken = this._getBearerToken();
-            let url = this._constructUrl(SafeguardJs.Services.CORE, 'v3/LoginMessage', null);
+            let url = this._constructUrl(SafeguardJs.Services.CORE, 'v4/LoginMessage', null);
             let additionalHeaders = {
                 'authorization': bearerToken,
                 'X-TokenLifetimeRemaining': ''
@@ -769,7 +834,7 @@ const SafeguardJs = {
          */
         async logout(callback) {
             let bearerToken = this._getBearerToken();
-            let url = this._constructUrl(SafeguardJs.Services.CORE, 'v3/Token/Logout', null);
+            let url = this._constructUrl(SafeguardJs.Services.CORE, 'v4/Token/Logout', null);
             let additionalHeaders = {
                 'authorization': bearerToken
             }
