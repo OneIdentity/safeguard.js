@@ -4,7 +4,7 @@ function getStatus(hostName) {
     if (hostName) {
         let connection = SafeguardJs.connectAnonymous(hostName);
 
-        connection.invoke(SafeguardJs.Services.NOTIFICATION, SafeguardJs.HttpMethods.GET, 'v3/Status')
+        connection.invoke(SafeguardJs.Services.NOTIFICATION, SafeguardJs.HttpMethods.GET, 'v4/Status')
         .then((results) => { 
             dw.log(results);
         })

@@ -8,7 +8,7 @@ function getStatus(hostName) {
 
 function saveConnectionCallback(safeguardConnection) {
     let connection = safeguardConnection;
-    connection.invoke(SafeguardJs.Services.NOTIFICATION, SafeguardJs.HttpMethods.GET, 'v3/Status', null, null, null, displayCallback);
+    connection.invoke(SafeguardJs.Services.NOTIFICATION, SafeguardJs.HttpMethods.GET, 'v4/Status', null, null, null, displayCallback);
 }
 
 function displayCallback(err, results) {

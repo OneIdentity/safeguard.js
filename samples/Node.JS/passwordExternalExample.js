@@ -23,7 +23,7 @@ const SafeguardJs = require('../../src/safeguard');
         let connection = await SafeguardJs.connectPassword(hostName, userName, password, externalProvider);
 
         console.log('Getting me');
-        let result = await connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.GET, 'v3/Me');
+        let result = await connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.GET, 'v4/Me');
         console.log(result, '\n');
     
         console.log('Getting login time remaining');

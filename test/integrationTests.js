@@ -16,7 +16,7 @@ describe('ConnectAnonymous', function() {
         assert.strictEqual(localStorage.getHostName(), config.hostName);
         assert.strictEqual(localStorage.getAccessToken(), '');
         assert.strictEqual(localStorage.getUserToken(), '');
-        await assert.doesNotReject(async () => await connection.invoke(sg.Services.NOTIFICATION, sg.HttpMethods.GET, 'v3/Status'));
+        await assert.doesNotReject(async () => await connection.invoke(sg.Services.NOTIFICATION, sg.HttpMethods.GET, 'v4/Status'));
     });
 });
 

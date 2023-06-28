@@ -47,7 +47,7 @@ A simple code example for calling the Safeguard API for authentication through t
 // Browser Example
 SafeguardJs.connectRsts('safeguard.sample.corp', `${window.location.protocol}//${window.location.host}${window.location.pathname}`)
 .then((connection) => {
-    connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.GET, 'v3/Me')
+    connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.GET, 'v4/Me')
     .then((results) => {
         console.log(results);
     });
@@ -197,7 +197,7 @@ Sample can be found <a href="samples\Browser\Promises\AnonymousExample">here</a>
 // Browser Example
 SafeguardJs.connectAnonymous('safeguard.sample.corp', saveConnectionCallback)
 .then((connection) => { 
-    connection.invoke(SafeguardJs.Services.NOTIFICATION, SafeguardJs.HttpMethods.GET, 'v3/Status')
+    connection.invoke(SafeguardJs.Services.NOTIFICATION, SafeguardJs.HttpMethods.GET, 'v4/Status')
     .then((results) => { 
         console.log(results);
     });
@@ -211,7 +211,7 @@ Sample can be found <a href="samples\Node.JS\anonymousExample.js">here</a>.
 let localStorage = new require('src/LocalStorage').LocalStorage;
 SafeguardJs.addCAFromFile(caFile);
 let connection = await SafeguardJs.connectAnonymous(hostName, null, localStorage);
-let result = await connection.invoke(SafeguardJs.Services.NOTIFICATION, SafeguardJs.HttpMethods.GET, 'v3/Status');
+let result = await connection.invoke(SafeguardJs.Services.NOTIFICATION, SafeguardJs.HttpMethods.GET, 'v4/Status');
 console.log(result);
 ```
 
@@ -270,10 +270,10 @@ let password = 'MyNewUser123';
 
 SafeguardJs.connectRsts('safeguard.sample.corp', `${window.location.protocol}//${window.location.host}${window.location.pathname}`)
 .then((connection) => {
-    connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.POST, 'v3/Users', user)
+    connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.POST, 'v4/Users', user)
     .then((results) => {
         let newUser = JSON.parse(results);
-        connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.PUT, `v3/Users/${newUser.Id}/Password`, `"${password}"`);
+        connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.HttpMethods.PUT, `v4/Users/${newUser.Id}/Password`, `"${password}"`);
     });
 });
 ```

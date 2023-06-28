@@ -220,7 +220,7 @@ const SafeguardJs = {
         let results = null;
 
         try {
-            results = await SafeguardJs._executePromise(`https://${hostName}/service/core/v3/AuthenticationProviders`, SafeguardJs.HttpMethods.GET, null, 'json', null, null, null);
+            results = await SafeguardJs._executePromise(`https://${hostName}/service/core/v4/AuthenticationProviders`, SafeguardJs.HttpMethods.GET, null, 'json', null, null, null);
             results = JSON.parse(results);
         } catch (err) {
             throw new Error(`Could not find the provider: '${provider}'. ${err}`);
@@ -288,7 +288,7 @@ const SafeguardJs = {
      * @param {string}  hostName    The name or ip of the safeguard appliance.
      */
     _tradeForUserToken: (accessToken, hostName) => {
-        let url = `https://${hostName}/service/core/v3/Token/LoginResponse`;
+        let url = `https://${hostName}/service/core/v4/Token/LoginResponse`;
         body = {
             "StsAccessToken" : accessToken
         }
@@ -491,7 +491,7 @@ const SafeguardJs = {
                 "StsAccessToken" : SafeguardJs.Storage.getAccessToken()
               };
     
-            let stsToken = await SafeguardJs._executePromise(`https://${hostName}/service/core/v3/Token/LoginResponse`, SafeguardJs.HttpMethods.POST, bodyData, 'json', null, null, null);
+            let stsToken = await SafeguardJs._executePromise(`https://${hostName}/service/core/v4/Token/LoginResponse`, SafeguardJs.HttpMethods.POST, bodyData, 'json', null, null, null);
             SafeguardJs.Storage.setUserToken(JSON.parse(stsToken).UserToken);
             
             let connection = new SafeguardJs.SafeguardConnection(hostName);
@@ -563,7 +563,7 @@ const SafeguardJs = {
                 "StsAccessToken" : SafeguardJs.Storage.getAccessToken()
               };
     
-            let stsToken = await SafeguardJs._executePromise(`https://${hostName}/service/core/v3/Token/LoginResponse`, SafeguardJs.HttpMethods.POST, bodyData, 'json');
+            let stsToken = await SafeguardJs._executePromise(`https://${hostName}/service/core/v4/Token/LoginResponse`, SafeguardJs.HttpMethods.POST, bodyData, 'json');
             SafeguardJs.Storage.setUserToken(JSON.parse(stsToken).UserToken);
             
             let connection = new SafeguardJs.SafeguardConnection(hostName);
@@ -681,7 +681,7 @@ const SafeguardJs = {
                 'authorization': `A2A ${apiKey}`
             }
 
-            let credential = await SafeguardJs._executePromise(`https://${hostName}/service/a2a/v3/Credentials?type=${type}&keyFormat=${keyFormat}`, SafeguardJs.HttpMethods.GET, null, 'json', additionalHeaders, null, null, httpsAgent);
+            let credential = await SafeguardJs._executePromise(`https://${hostName}/service/a2a/v4/Credentials?type=${type}&keyFormat=${keyFormat}`, SafeguardJs.HttpMethods.GET, null, 'json', additionalHeaders, null, null, httpsAgent);
             
             // Remove any leading or trailing quotes that were added from string conversion
             if (credential.slice(0, 1) === '"') {
@@ -813,7 +813,7 @@ const SafeguardJs = {
          */
         async getAccessTokenLifetimeRemaining(callback) {
             let bearerToken = this._getBearerToken();
-            let url = this._constructUrl(SafeguardJs.Services.CORE, 'v3/LoginMessage', null);
+            let url = this._constructUrl(SafeguardJs.Services.CORE, 'v4/LoginMessage', null);
             let additionalHeaders = {
                 'authorization': bearerToken,
                 'X-TokenLifetimeRemaining': ''
@@ -834,7 +834,7 @@ const SafeguardJs = {
          */
         async logout(callback) {
             let bearerToken = this._getBearerToken();
-            let url = this._constructUrl(SafeguardJs.Services.CORE, 'v3/Token/Logout', null);
+            let url = this._constructUrl(SafeguardJs.Services.CORE, 'v4/Token/Logout', null);
             let additionalHeaders = {
                 'authorization': bearerToken
             }
