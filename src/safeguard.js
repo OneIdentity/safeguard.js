@@ -230,9 +230,9 @@ const SafeguardJs = {
             for (const p of results) {
                 if (provider.toUpperCase() == p.Name.toUpperCase()) {
                     return p.RstsProviderScope;
-                } else if (provider.toUpperCase() == p.Id.toUpperCase()) {
+                } else if (provider.toUpperCase() == p.RstsProviderId.toUpperCase()) {
                     return p.RstsProviderScope;
-                } else if (p.Id.toUpperCase().includes(provider.toUpperCase())) {
+                } else if (p.RstsProviderId.toUpperCase().includes(provider.toUpperCase())) {
                     return p.RstsProviderScope;
                 }
             }
