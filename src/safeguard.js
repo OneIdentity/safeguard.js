@@ -206,13 +206,13 @@ const SafeguardJs = {
     },
 
     /**
-     * (Internal) Gets the provider id for a given provider.
+     * (Internal) Gets the provider scope for a given provider.
      *
      * @param {string}              hostName        (Required) The name or ip of the safeguard appliance.
      * @param {string}              defaultProvider (Required) The id of the default provider.
      * @param {string}              provider        (Optional) The name or id of the provider to use. Default is local.
      */
-    _getProviderId: async (hostName, defaultProvider, provider) => {
+    _getProviderScope: async (hostName, defaultProvider, provider) => {
         if (provider == null || provider === "" || provider.toUpperCase() == "LOCAL" || provider.toUpperCase() == "CERTIFICATE") {
             return defaultProvider;
         }
@@ -229,11 +229,11 @@ const SafeguardJs = {
         try {
             for (const p of results) {
                 if (provider.toUpperCase() == p.Name.toUpperCase()) {
-                    return p.RstsProviderId;
-                } else if (provider.toUpperCase() == p.Id.toUpperCase()) {
-                    return p.RstsProviderId;
-                } else if (p.Id.toUpperCase().includes(provider.toUpperCase())) {
-                    return p.RstsProviderId;
+                    return p.RstsProviderScope;
+                } else if (provider.toUpperCase() == p.RstsProviderId.toUpperCase()) {
+                    return p.RstsProviderScope;
+                } else if (p.RstsProviderId.toUpperCase().includes(provider.toUpperCase())) {
+                    return p.RstsProviderScope;
                 }
             }
         } catch (err) {
@@ -466,7 +466,7 @@ const SafeguardJs = {
             throw new Error('password may not be null or empty');
         }
 
-        let providerId = await SafeguardJs._getProviderId(hostName, 'local', provider);
+        let providerScope = await SafeguardJs._getProviderScope(hostName, 'local', provider);
 
         if (storage) {
             SafeguardJs.Storage = storage;
@@ -481,7 +481,7 @@ const SafeguardJs = {
                 "grant_type" : "password",
                 "username" : userName,
                 "password" : password,
-                "scope" : `rsts:sts:primaryproviderid:${providerId}`
+                "scope" : providerScope
             };
                           
             let accessToken = await SafeguardJs._executePromise(`https://${hostName}/RSTS/oauth2/token`, SafeguardJs.HttpMethods.POST, bodyData, 'json', null, null, null);
@@ -532,7 +532,7 @@ const SafeguardJs = {
             throw new Error('passphrase may not be null or empty');
         }
 
-        let providerId = await SafeguardJs._getProviderId(hostName, 'certificate', provider);
+        let providerScope = await SafeguardJs._getProviderScope(hostName, 'certificate', provider);
         
         if (storage) {
             SafeguardJs.Storage = storage;
@@ -545,7 +545,7 @@ const SafeguardJs = {
         try {
             let bodyData = {
                 "grant_type" : "client_credentials",
-                "scope" : `rsts:sts:primaryproviderid:${providerId}`
+                "scope" : providerScope
               };
 
             let httpsAgent = new HTTPS.Agent({
