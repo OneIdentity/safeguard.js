@@ -1,6 +1,6 @@
 variables:
   - name: isPrerelease
-    value: ${{ true }}
+    value: ${{ false }}
 
 trigger:
   branches:
