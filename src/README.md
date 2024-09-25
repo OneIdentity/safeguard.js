@@ -13,6 +13,7 @@ JavaScript development can be done many ways, this is just one way with Visual S
 * Open root folder of safeguard-js.
 * Open a New Terminal and execute the following.
   ```
+  npm install
   npm run build
   ```
   Running the build script does a few things for the Browser samples, but is not needed for Node.JS samples.

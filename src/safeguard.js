@@ -213,8 +213,11 @@ const SafeguardJs = {
      * @param {string}              provider        (Optional) The name or id of the provider to use. Default is local.
      */
     _getProviderScope: async (hostName, defaultProvider, provider) => {
-        if (provider == null || provider === "" || provider.toUpperCase() == "LOCAL" || provider.toUpperCase() == "CERTIFICATE") {
-            return defaultProvider;
+        if (provider == null || provider === ""){
+            return "rsts:sts:primaryproviderid:" + defaultProvider;
+        }
+        else if (provider.toUpperCase() == "LOCAL" || provider.toUpperCase() == "CERTIFICATE") {
+          return "rsts:sts:primaryproviderid:" + provider.toLowerCase();
         }
 
         let results = null;
@@ -513,7 +516,7 @@ const SafeguardJs = {
      * @param {string}              key         (Required) The user certificate's key in key format.
      * @param {string}              pfx         (Required) The user certificate in pfx format.
      * @param {string}              passphrase  (Required) The user certificate's passphrase.
-     * @param {string}              provider    (Optional) The name of the provider to use. Default is local.
+     * @param {string}              provider    (Optional) The name of the provider to use. Default is certificate.
      * @param {function}            callback    (Optional) The function to call with the resultant SafeguardConnection object.
      * @param {SafeguardJs.Storage} storage     (Optional) The storage location of any authentication information.
      */
