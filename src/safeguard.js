@@ -217,7 +217,7 @@ const SafeguardJs = {
             return "rsts:sts:primaryproviderid:" + defaultProvider;
         }
         else if (provider.toUpperCase() == "LOCAL" || provider.toUpperCase() == "CERTIFICATE") {
-          return "rsts:sts:primaryproviderid:" + provider.toLowerCase();
+            return "rsts:sts:primaryproviderid:" + provider.toLowerCase();
         }
 
         let results = null;
