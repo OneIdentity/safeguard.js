@@ -45,3 +45,5 @@ export type {
   PkceCallbackResult,
   TokenAuthOptions,
 } from './auth/index.js';
+
+export { SafeguardClient } from './client.js';
