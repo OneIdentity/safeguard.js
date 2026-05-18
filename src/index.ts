@@ -26,3 +26,7 @@ export {
 
 export { MemoryStorage, BrowserSessionStorage, StorageKeys } from './storage/index.js';
 export type { StorageProvider } from './storage/index.js';
+
+export { NodeHttpClient, BrowserHttpClient } from './http/index.js';
+export type { HttpClient, HttpRequestOptions, HttpResponse, TlsOptions } from './http/index.js';
+
