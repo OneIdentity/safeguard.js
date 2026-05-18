@@ -332,4 +332,12 @@ ASALocalRun/
 .mfractor/
 /test/ssl
 /test/config.js
-/package-lock.json
+
+# Node.js
+dist/
+coverage/
+.env
+.env.*
+
+# Worktrees
+.worktrees/

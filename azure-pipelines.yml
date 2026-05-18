@@ -1,29 +1,87 @@
-trigger: none
-pr:
-   branches:
+variables:
+  - template: pipeline-templates/global-variables.yml
+
+trigger:
+  branches:
     include:
+      - main
       - master
       - release-*
-   paths:
+  tags:
+    include:
+      - 'v*'
+  paths:
     exclude:
-      - README.md
-      - samples
-      - test
+      - '**/*.md'
+      - LICENSE
+      - .github/CODEOWNERS
+      - samples/
 
-pool:
-  vmImage: 'windows-latest'
+pr:
+  branches:
+    include:
+      - main
+      - master
+      - release-*
+  paths:
+    exclude:
+      - '**/*.md'
+      - LICENSE
+      - .github/CODEOWNERS
+      - samples/
 
-steps:
-- task: NodeTool@0
-  inputs:
-    versionSpec: '14.x'
-  displayName: 'Install Node.js'
+jobs:
+- job: PRValidation
+  displayName: 'PR Validation: safeguard.js SDK'
+  condition: eq(variables['Build.Reason'], 'PullRequest')
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+    - template: pipeline-templates/build-steps.yml
 
-- script: |
-    npm install --production=false
-    npm run build
-  displayName: 'npm install and build'
+- job: BuildAndPublish
+  displayName: 'Build and publish safeguard.js SDK'
+  condition: ne(variables['Build.Reason'], 'PullRequest')
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+    - template: pipeline-templates/build-steps.yml
 
-- script: |
-    npm test
-  displayName: 'npm unit tests'
+    - task: Npm@1
+      inputs:
+        command: 'publish'
+        publishEndpoint: 'safeguard.js service connection'
+      condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
+      displayName: 'Publish to npm'
+
+    - task: GitHubRelease@1
+      inputs:
+        gitHubConnection: 'PangaeaBuild-GitHub'
+        repositoryName: 'OneIdentity/safeguard.js'
+        action: 'create'
+        target: '$(Build.SourceVersion)'
+        tagSource: 'userSpecifiedTag'
+        tag: '$(ReleaseTag)'
+        title: '$(ReleaseTag)'
+        isPreRelease: ${{ not(startsWith(variables['Build.SourceBranch'], 'refs/tags/')) }}
+        changeLogCompareToRelease: 'lastFullRelease'
+        changeLogType: 'commitBased'
+      displayName: 'Create GitHub Release'
+
+- job: IntegrationTests
+  displayName: 'Integration Tests (Manual)'
+  condition: and(
+    ne(variables['Build.Reason'], 'PullRequest'),
+    eq(variables['RUN_INTEGRATION_TESTS'], 'true')
+  )
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+    - template: pipeline-templates/build-steps.yml
+    - script: npm run test:integration
+      displayName: 'Integration tests'
+      env:
+        SPP_HOST: $(SPP_HOST)
+        SPP_USERNAME: $(SPP_USERNAME)
+        SPP_PASSWORD: $(SPP_PASSWORD)
+        SPP_CA_FILE: $(SPP_CA_FILE)

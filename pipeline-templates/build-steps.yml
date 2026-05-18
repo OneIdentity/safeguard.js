@@ -1,0 +1,52 @@
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '22.x'
+    displayName: 'Install Node.js 22 LTS'
+
+  - script: npm ci
+    displayName: 'Install dependencies'
+
+  - task: PowerShell@2
+    displayName: 'Set package version'
+    inputs:
+      targetType: filePath
+      filePath: $(System.DefaultWorkingDirectory)/pipeline-templates/versionnumber.ps1
+      arguments: >
+        -BuildId $(Build.BuildId)
+        -TagName $(Build.SourceBranchName)
+        -IsTagBuild $(isTagBuild)
+
+  - script: npm run lint
+    displayName: 'Lint'
+
+  - script: npm run typecheck
+    displayName: 'Type check'
+
+  - script: npm run test
+    displayName: 'Unit tests'
+
+  - script: npm audit --audit-level=high
+    displayName: 'Security audit'
+    continueOnError: true
+
+  - script: npm run build
+    displayName: 'Build (ESM + CJS + types)'
+
+  - task: CopyFiles@2
+    displayName: 'Copy dist to staging'
+    inputs:
+      SourceFolder: '$(Build.SourcesDirectory)'
+      Contents: |
+        dist/**
+        package.json
+        README.md
+        LICENSE
+      TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+  - task: PublishPipelineArtifact@0
+    displayName: 'Publish artifact'
+    inputs:
+      artifactName: 'drop'
+      targetPath: '$(Build.ArtifactStagingDirectory)'
+    condition: succeededOrFailed()
