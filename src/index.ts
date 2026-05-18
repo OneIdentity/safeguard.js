@@ -51,3 +51,11 @@ export type {
 } from './auth/index.js';
 
 export { SafeguardClient } from './client.js';
+
+export { A2AClient, SshKeyFormat, BrokeredAccessRequestType } from './a2a/index.js';
+export type {
+  A2AClientOptions,
+  RetrievableAccount,
+  BrokeredAccessRequest,
+  BrokeredAccessResponse,
+} from './a2a/index.js';
