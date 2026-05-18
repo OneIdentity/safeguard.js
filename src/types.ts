@@ -55,7 +55,7 @@ export interface RequestOptions {
  */
 export interface SafeguardClientOptions {
   /** Authentication strategy. */
-  auth: unknown; // Typed as Auth in auth module
+  auth: import('./auth/types.js').Auth;
   /** Custom CA certificate (PEM string or Buffer). Node.js only. */
   ca?: string | Buffer;
   /** Whether to verify TLS certificates. Default: true. */
