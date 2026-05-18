@@ -30,3 +30,22 @@ export type { StorageProvider } from './storage/index.js';
 export { NodeHttpClient, BrowserHttpClient } from './http/index.js';
 export type { HttpClient, HttpRequestOptions, HttpResponse, TlsOptions } from './http/index.js';
 
+export {
+  PasswordAuth,
+  CertificateAuth,
+  PkceAuth,
+  PkceNonInteractiveAuth,
+  handlePkceCallback,
+  TokenAuth,
+  AnonymousAuth,
+} from './auth/index.js';
+export type {
+  Auth,
+  TokenSet,
+  PasswordAuthOptions,
+  CertificateAuthOptions,
+  PkceAuthOptions,
+  PkceNonInteractiveAuthOptions,
+  PkceCallbackResult,
+  TokenAuthOptions,
+} from './auth/index.js';
