@@ -45,18 +45,22 @@ jobs:
   steps:
     - template: pipeline-templates/build-steps.yml
 
-    - task: Npm@1
+    - task: AzureKeyVault@2
       inputs:
-        command: 'publish'
-        publishEndpoint: 'safeguard.js service connection'
+        azureSubscription: 'SafeguardOpenSource'
+        KeyVaultName: 'SafeguardBuildSecrets'
+        SecretsFilter: 'NpmOrgApiKey'
+      displayName: 'Get npm API key from Azure Key Vault'
+
+    - script: |
+        npm config set //registry.npmjs.org/:_authToken=$(NpmOrgApiKey)
+        npm publish
       condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
       displayName: 'Publish to npm (release)'
 
-    - task: Npm@1
-      inputs:
-        command: 'custom'
-        customCommand: 'publish --tag pre'
-        publishEndpoint: 'safeguard.js service connection'
+    - script: |
+        npm config set //registry.npmjs.org/:_authToken=$(NpmOrgApiKey)
+        npm publish --tag pre
       condition: and(succeeded(), not(startsWith(variables['Build.SourceBranch'], 'refs/tags/v')))
       displayName: 'Publish to npm (pre-release)'
 
