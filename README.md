@@ -229,19 +229,43 @@ const accounts = await a2a.getRetrievableAccounts();
 
 ## Event Listeners (SignalR)
 
+Real-time event support requires the optional `@microsoft/signalr` peer dependency:
+
+```bash
+npm install @microsoft/signalr
+```
+
+Event classes are imported from the `@oneidentity/safeguard/events` subpath:
+
+```typescript
+import { SafeguardEventListener } from '@oneidentity/safeguard/events';
+import { PasswordAuth, NodeHttpClient, MemoryStorage } from '@oneidentity/safeguard';
+import * as signalR from '@microsoft/signalr';
+```
+
 ### One-Shot Listener
 
 ```typescript
-const listener = await client.getEventListener();
+// Authenticate and build SignalR connection
+const auth = new PasswordAuth({ username: 'Admin', password: 'Admin123', provider: 'Local' });
+const httpClient = new NodeHttpClient();
+const storage = new MemoryStorage();
+const tokenSet = await auth.authenticate('safeguard.sample.corp', httpClient, storage);
+
+const connection = new signalR.HubConnectionBuilder()
+  .withUrl(`https://safeguard.sample.corp/service/event/signalr`, {
+    accessTokenFactory: () => tokenSet.accessToken.expose(),
+  })
+  .withAutomaticReconnect()
+  .build();
+
+const listener = new SafeguardEventListener(connection);
 
 listener.on('NotifyEventAsync', (event) => {
   console.log('Event received:', event);
 });
 
 await listener.start();
-
-// Later...
-await listener.stop();
 ```
 
 ### Persistent Listener (Auto-Reconnect)
@@ -250,21 +274,18 @@ For long-running processes that need to survive network interruptions and
 token expiration:
 
 ```typescript
-import { PersistentSafeguardEventListener, PasswordAuth, NodeHttpClient, MemoryStorage } from '@oneidentity/safeguard';
+import { PersistentSafeguardEventListener } from '@oneidentity/safeguard/events';
 
-const listener = new PersistentSafeguardEventListener('safeguard.sample.corp', {
-  auth: new PasswordAuth({ username: 'Admin', password: 'Admin123', provider: 'Local' }),
-  httpClient: new NodeHttpClient(),
-  storage: new MemoryStorage(),
-  retryIntervalMs: 5000,
+const listener = new PersistentSafeguardEventListener(
+  connection, auth, 'safeguard.sample.corp', httpClient, storage,
+);
+
+listener.onStateChange((state) => {
+  console.log('State:', state);
 });
 
 listener.on('NotifyEventAsync', (event) => {
   console.log('Event:', event);
-});
-
-listener.onStateChange((from, to) => {
-  console.log(`Listener state: ${from} → ${to}`);
 });
 
 await listener.start();
@@ -296,6 +317,76 @@ const client = new SafeguardClient('safeguard.sample.corp', {
 
 client.setHttpClient(new NodeHttpClient({ ca: '/path/to/ca.pem' }));
 ```
+
+## Security
+
+### Token Storage (Browser)
+
+The SDK stores access tokens **in memory only**. Tokens do not survive a page
+refresh, which is the secure default for single-page applications without a
+backend-for-frontend (BFF).
+
+If your application requires persistence across page reloads, you may
+explicitly store the token yourself — but be aware this exposes the token to
+cross-site scripting (XSS) attacks:
+
+```typescript
+await client.connect();
+// ⚠️ Customer explicitly accepts the XSS risk:
+sessionStorage.setItem('my_token', client.accessToken.expose());
+```
+
+For high-security environments, prefer in-memory tokens with re-authentication
+on refresh, or implement a BFF pattern where tokens never reach the browser.
+
+### SecretValue
+
+Credentials and access tokens are wrapped in `SecretValue`, a class that
+redacts content from `toString()`, `toJSON()`, and `console.log()` output.
+This prevents accidental logging of secrets.
+
+To retrieve the raw string value (e.g., for HTTP headers or storage), call
+`.expose()`:
+
+```typescript
+const tokenSet = await auth.authenticate(host, httpClient, storage);
+const raw: string = tokenSet.accessToken.expose(); // explicit opt-in
+```
+
+### TLS Verification
+
+TLS certificate verification is **enabled by default** and should never be
+disabled in production. For development environments with self-signed
+certificates:
+
+```typescript
+// Development only — never use in production
+const client = new SafeguardClient('dev-appliance.local', {
+  auth: new PasswordAuth({ ... }),
+  verify: false,
+});
+```
+
+For production with a custom CA:
+
+```typescript
+const client = new SafeguardClient('safeguard.corp', { auth });
+client.setHttpClient(new NodeHttpClient({ ca: '/path/to/ca-bundle.pem' }));
+```
+
+### Host Validation
+
+The `SafeguardClient` constructor validates the `host` parameter to prevent
+injection attacks. Only bare hostnames or IP addresses are accepted — URLs,
+paths, ports, query strings, and whitespace are rejected with a
+`ConfigurationError`.
+
+### Token Lifetime
+
+`client.getAccessTokenLifetimeRemaining()` decodes the JWT `exp` claim
+client-side. This is a convenience for scheduling token refresh — never use it
+as an authorization decision. The server is the sole authority on token
+validity.
 
 ## About the Safeguard API
 

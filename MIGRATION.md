@@ -240,21 +240,31 @@ await connection.registerSignalR(callback);
 ```
 
 ```typescript
-// v8.0
-const listener = await client.getEventListener();
+// v8.0 — SignalR is now an optional peer dependency
+// Install it explicitly: npm install @microsoft/signalr
+import { SafeguardEventListener } from '@oneidentity/safeguard/events';
+import * as signalR from '@microsoft/signalr';
+
+// Build SignalR connection with access token
+const connection = new signalR.HubConnectionBuilder()
+  .withUrl(`https://${host}/service/event/signalr`, {
+    accessTokenFactory: () => tokenSet.accessToken.expose(),
+  })
+  .withAutomaticReconnect()
+  .build();
+
+const listener = new SafeguardEventListener(connection);
 listener.on('NotifyEventAsync', (event) => {
   console.log(event);
 });
 await listener.start();
 
 // Persistent listener with auto-reconnect (new in v8.0)
-import { PersistentSafeguardEventListener } from '@oneidentity/safeguard';
+import { PersistentSafeguardEventListener } from '@oneidentity/safeguard/events';
 
-const persistent = new PersistentSafeguardEventListener('host', {
-  auth: new PasswordAuth({ username: 'admin', password: 'pass', provider: 'Local' }),
-  httpClient: new NodeHttpClient(),
-  storage: new MemoryStorage(),
-});
+const persistent = new PersistentSafeguardEventListener(
+  connection, auth, host, httpClient, storage,
+);
 persistent.on('NotifyEventAsync', handler);
 await persistent.start();
 ```
@@ -344,7 +354,53 @@ await client.disconnect();
 | `SafeguardJs.connectAnonymous()` | `new SafeguardClient(host, { auth: new AnonymousAuth() })` |
 | `SafeguardJs.a2aGetCredentialFromFiles()` | `new A2AClient(host, { auth }).retrievePassword(key)` |
 | `connection.invoke(service, method, path, body)` | `client.get()` / `client.post()` / `client.put()` / `client.delete()` |
-| `connection.registerSignalR(callback)` | `(await client.getEventListener()).start()` |
+| `connection.registerSignalR(callback)` | `SafeguardEventListener` from `@oneidentity/safeguard/events` |
 | `connection.getAccessTokenLifetimeRemaining()` | `client.getAccessTokenLifetimeRemaining()` |
 | `src/LocalStorage.js` | `MemoryStorage` (Node.js) |
 | `src/SessionStorage.js` | `BrowserSessionStorage` (Browser) |
+
+## Security Changes in v8.0
+
+### Access Token is Now `SecretValue`
+
+In v8.0, `tokenSet.accessToken` returns a `SecretValue` instance rather than a
+plain string. This prevents accidental logging of tokens via `console.log()`,
+`JSON.stringify()`, or template literals.
+
+To get the raw token string, call `.expose()`:
+
+```typescript
+// v7.x
+const raw = connection.getAccessToken(); // string
+
+// v8.0
+const tokenSet = await auth.authenticate(host, httpClient, storage);
+const raw = tokenSet.accessToken.expose(); // explicit opt-in
+```
+
+### No Automatic Token Persistence
+
+The SDK no longer writes access tokens to `sessionStorage`. Tokens are held in
+memory only. If you need persistence across page reloads, store the token
+explicitly (see README Security section for tradeoffs).
+
+### SignalR is an Optional Peer Dependency
+
+`@microsoft/signalr` is no longer installed automatically. If you use
+real-time events, install it as a direct dependency:
+
+```bash
+npm install @microsoft/signalr
+```
+
+Then import event classes from the subpath:
+
+```typescript
+import { SafeguardEventListener } from '@oneidentity/safeguard/events';
+```
+
+### Host Validation
+
+`SafeguardClient` and `A2AClient` now validate that the `host` parameter is a
+bare hostname or IP address. Passing a URL (e.g., `https://host`) or a host
+with a path/port/query will throw a `ConfigurationError`.
