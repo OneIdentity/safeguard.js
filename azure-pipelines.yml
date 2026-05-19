@@ -76,10 +76,7 @@ jobs:
 
 - job: IntegrationTests
   displayName: 'Integration Tests (Manual)'
-  condition: and(
-    ne(variables['Build.Reason'], 'PullRequest'),
-    eq(variables['RUN_INTEGRATION_TESTS'], 'true')
-  )
+  condition: and(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['RUN_INTEGRATION_TESTS'], 'true'))
   pool:
     vmImage: 'ubuntu-latest'
   steps:
