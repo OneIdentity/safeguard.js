@@ -60,12 +60,3 @@ export type {
   BrokeredAccessRequest,
   BrokeredAccessResponse,
 } from './a2a/index.js';
-
-export { SafeguardEventListener, PersistentSafeguardEventListener } from './events/index.js';
-export type {
-  EventListenerState,
-  EventHandler,
-  StateChangeHandler,
-  SafeguardEvent,
-  PersistentListenerOptions,
-} from './events/index.js';

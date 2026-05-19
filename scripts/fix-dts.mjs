@@ -13,6 +13,8 @@ const mappings = [
   { pattern: /^index-[^.]+\.d\.ts$/, target: 'index.d.ts' },
   { pattern: /^index-[^.]+\.d\.cts$/, target: 'index.d.cts' },
   { pattern: /^browser-[^.]+\.d\.ts$/, target: 'browser.d.ts' },
+  { pattern: /^events-[^.]+\.d\.ts$/, target: 'events.d.ts' },
+  { pattern: /^events-[^.]+\.d\.cts$/, target: 'events.d.cts' },
 ];
 
 for (const { pattern, target } of mappings) {
