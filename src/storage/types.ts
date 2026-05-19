@@ -10,8 +10,6 @@ export interface StorageProvider {
 
 /** Well-known storage keys used by the SDK. */
 export const StorageKeys = {
-  ACCESS_TOKEN: 'safeguard_access_token',
-  USER_TOKEN: 'safeguard_user_token',
   STATE: 'safeguard_state',
   CODE_VERIFIER: 'safeguard_code_verifier',
 } as const;

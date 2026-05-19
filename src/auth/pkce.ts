@@ -36,15 +36,6 @@ export class PkceAuth implements Auth {
    * exchanges it for a token. Otherwise, redirects to RSTS login.
    */
   async authenticate(host: string, httpClient: HttpClient, storage: StorageProvider): Promise<TokenSet> {
-    // Check if we have a stored access token from a previous callback
-    const storedToken = storage.get(StorageKeys.ACCESS_TOKEN);
-    if (storedToken) {
-      return {
-        accessToken: storedToken,
-        acquiredAt: Date.now(),
-      };
-    }
-
     // Check for authorization code (set by handlePkceCallback)
     const code = storage.get('safeguard_auth_code');
     if (code) {
@@ -55,7 +46,7 @@ export class PkceAuth implements Auth {
       storage.remove('safeguard_auth_code');
       storage.remove(StorageKeys.CODE_VERIFIER);
       storage.remove(StorageKeys.STATE);
-      return this.#exchangeCode(host, httpClient, code, verifier, storage);
+      return this.#exchangeCode(host, httpClient, code, verifier);
     }
 
     // No code — initiate redirect
@@ -99,7 +90,6 @@ export class PkceAuth implements Auth {
     httpClient: HttpClient,
     code: string,
     verifier: string,
-    storage: StorageProvider,
   ): Promise<TokenSet> {
     const body = new URLSearchParams({
       grant_type: 'authorization_code',
@@ -146,7 +136,8 @@ export class PkceAuth implements Auth {
     };
     if (userData.ExpiresIn != null) tokenSet.expiresIn = userData.ExpiresIn;
 
-    storage.set(StorageKeys.ACCESS_TOKEN, tokenSet.accessToken);
+    // Token stays in-memory only (SafeguardClient.#tokenSet). Not persisted to
+    // sessionStorage to avoid XSS exfiltration of high-privilege PAM tokens.
     return tokenSet;
   }
 }
