@@ -51,13 +51,23 @@ interface Auth {
 ## Client Usage
 
 ```typescript
+import { SafeguardClient, PasswordAuth, NodeHttpClient, Service, HttpMethod } from '@oneidentity/safeguard';
+
+// 1. Create auth — `provider` is REQUIRED (e.g. 'Local', 'ad.example.com')
+const auth = new PasswordAuth({ username: 'admin', password: 'secret', provider: 'Local' });
+
+// 2. Create client
 const client = new SafeguardClient('appliance.example.com', {
-  auth: new PasswordAuth({ username: 'admin', password: 'secret' }),
-  verify: true,
+  auth,
+  verify: false,       // Only for lab/dev! Default: true
   timeout: 300_000,
   autoRefresh: true,
 });
 
+// 3. MUST set HttpClient before connect — platform-specific
+client.setHttpClient(new NodeHttpClient({ rejectUnauthorized: false }));
+
+// 4. Connect (authenticates)
 await client.connect();
 
 // Convenience verbs (typed)
@@ -73,7 +83,32 @@ const response = await client.invoke(Service.CORE, HttpMethod.GET, 'v4/Me', {
 await client.disconnect();
 ```
 
-## Error Handling
+**Critical notes:**
+- `PasswordAuth` requires `provider` — throws `ConfigurationError` if omitted
+- `client.setHttpClient(...)` MUST be called before `connect()` — throws otherwise
+- Node uses `NodeHttpClient`, browser uses `BrowserHttpClient`
+- `NodeHttpClient({ rejectUnauthorized: false })` disables TLS cert validation
+- `verify: false` on the client is NOT sufficient to skip TLS; the HttpClient controls it
+
+## Query Parameters
+
+The SPP API uses its own query parameter names — NOT OData `$`-prefixed params.
+Pass them as a flat `Record<string, string | number | boolean>`:
+
+```typescript
+// filter, fields, orderby, page, count — no $ prefix
+const users = await client.get<User[]>(Service.CORE, 'v4/Users', {
+  query: { filter: 'Disabled eq false', fields: 'UserName,Name', orderby: 'UserName' }
+});
+```
+
+- `filter` — SPP filter expressions (e.g. `Name contains "admin"`)
+- `fields` — comma-separated field names to include
+- `orderby` — field name with optional `asc`/`desc`
+- `page` / `limit` — pagination
+- `count` — include `X-Total-Count` header (boolean)
+
+The SDK passes these verbatim as URL query params. It does NOT transform them.
 
 ```typescript
 try {

@@ -61,7 +61,7 @@ Do NOT manually edit `version` in package.json. CI stamps version from git tags:
 
 - **Azure Pipelines** — unified `azure-pipelines.yml` with `pipeline-templates/`
 - **Trigger:** PR to `main` → validation; merge to `main` → dev prerelease; tag `v*` → stable release
-- **npm publish:** tag builds only, via `safeguard.js service connection`
+- **npm publish:** via `AzureKeyVault@2` → `SafeguardBuildSecrets` → `NpmOrgApiKey` (90-day rotation)
 - **GitHub Release:** `PangaeaBuild-GitHub` connection
 
 ## Security
