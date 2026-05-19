@@ -69,7 +69,7 @@ jobs:
         tagSource: 'userSpecifiedTag'
         tag: '$(ReleaseTag)'
         title: '$(ReleaseTag)'
-        isPreRelease: ${{ not(startsWith(variables['Build.SourceBranch'], 'refs/tags/')) }}
+        isPreRelease: ${{ ne(variables['isTagBuild'], 'true') }}
         changeLogCompareToRelease: 'lastFullRelease'
         changeLogType: 'commitBased'
       displayName: 'Create GitHub Release'
