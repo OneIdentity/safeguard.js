@@ -75,10 +75,11 @@ The `versionnumber.ps1` script stamps `package.json` version via `npm pkg set ve
 
 ## Release Flow
 
-1. Merge feature → `main` → pipeline builds, creates dev GitHub Release
-2. When ready: push tag `v8.0.0` → pipeline detects tag → npm publish → stable GitHub Release
-3. npm publish uses `safeguard.js service connection`
-4. GitHub Release uses `PangaeaBuild-GitHub` connection
+1. Merge feature → `main` → pipeline builds, publishes `8.0.0-pre{N}` to npm (`pre` tag), creates dev GitHub Release
+2. When ready: push tag `v8.0.0` → pipeline detects tag → `npm publish` (no tag = `latest`) → stable GitHub Release
+3. npm publish uses `AzureKeyVault@2` with `azureSubscription: 'SafeguardOpenSource'`, `KeyVaultName: 'SafeguardBuildSecrets'`, `SecretsFilter: 'NpmOrgApiKey'`
+4. The npm token is a Granular Access Token with "Bypass 2FA" — **expires every 90 days** (npm hard limit). Rotation required.
+5. GitHub Release uses `PangaeaBuild-GitHub` connection
 
 ## npm Scripts
 
@@ -111,5 +112,8 @@ node --input-type=module -e "import('./dist/index.js').then(m => console.log(Obj
 
 | Connection | Purpose | Used By |
 |-----------|---------|---------|
-| `safeguard.js service connection` | npm publish | Npm@1 task |
-| `PangaeaBuild-GitHub` | GitHub Releases | GitHubRelease@1 task |
+| `SafeguardOpenSource` | Azure subscription for Key Vault access | AzureKeyVault@2 task |
+| `SafeguardBuildSecrets` | Key Vault holding `NpmOrgApiKey` | AzureKeyVault@2 task |
+| `PangaeaBuild-GitHub` | GitHub Releases + repo access | GitHubRelease@1 task, pipeline source |
+
+**npm token rotation:** The `NpmOrgApiKey` secret expires every 90 days (npm enforces this for Granular Access Tokens with 2FA bypass). Regenerate on npmjs.com and update the Key Vault secret before expiry.
