@@ -61,17 +61,14 @@ jobs:
         tagSource: 'userSpecifiedTag'
         tag: '$(ReleaseTag)'
         title: '$(ReleaseTag)'
-        isPreRelease: ${{ not(startsWith(variables['Build.SourceBranch'], 'refs/tags/')) }}
+        isPreRelease: ${{ ne(variables['isTagBuild'], 'true') }}
         changeLogCompareToRelease: 'lastFullRelease'
         changeLogType: 'commitBased'
       displayName: 'Create GitHub Release'
 
 - job: IntegrationTests
   displayName: 'Integration Tests (Manual)'
-  condition: and(
-    ne(variables['Build.Reason'], 'PullRequest'),
-    eq(variables['RUN_INTEGRATION_TESTS'], 'true')
-  )
+  condition: and(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['RUN_INTEGRATION_TESTS'], 'true'))
   pool:
     vmImage: 'ubuntu-latest'
   steps:
