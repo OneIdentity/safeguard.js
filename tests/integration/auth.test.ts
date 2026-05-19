@@ -9,7 +9,6 @@ import { requireAppliance } from './setup.js';
 import { createAdminClient } from './fixtures.js';
 import { SafeguardClient } from '../../src/client.js';
 import { PasswordAuth } from '../../src/auth/password.js';
-import { TokenAuth } from '../../src/auth/token.js';
 import { NodeHttpClient } from '../../src/http/node.js';
 import { Service } from '../../src/types.js';
 

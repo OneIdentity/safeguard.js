@@ -50,7 +50,15 @@ jobs:
         command: 'publish'
         publishEndpoint: 'safeguard.js service connection'
       condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
-      displayName: 'Publish to npm'
+      displayName: 'Publish to npm (release)'
+
+    - task: Npm@1
+      inputs:
+        command: 'custom'
+        customCommand: 'publish --tag pre'
+        publishEndpoint: 'safeguard.js service connection'
+      condition: and(succeeded(), not(startsWith(variables['Build.SourceBranch'], 'refs/tags/v')))
+      displayName: 'Publish to npm (pre-release)'
 
     - task: GitHubRelease@1
       inputs:

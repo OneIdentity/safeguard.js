@@ -8,7 +8,7 @@
  * Triggering actual events would require changing passwords/running tasks
  * which is too invasive for a smoke-level integration test.
  */
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import * as signalR from '@microsoft/signalr';
 import { requireAppliance } from './setup.js';
 import { SafeguardEventListener } from '../../src/events/index.js';

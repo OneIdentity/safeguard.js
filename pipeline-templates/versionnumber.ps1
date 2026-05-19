@@ -16,7 +16,7 @@ if ($IsTagBuildBool) {
     $PackageVersion = $TagName -replace '^v', ''
 } else {
     $BuildNumber = $BuildId % 65534
-    $PackageVersion = "${SemanticVersion}-dev.${BuildNumber}"
+    $PackageVersion = "${SemanticVersion}-pre${BuildNumber}"
 }
 
 npm pkg set version=$PackageVersion
