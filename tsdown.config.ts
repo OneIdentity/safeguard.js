@@ -20,4 +20,14 @@ export default defineConfig([
     outDir: 'dist',
     platform: 'browser',
   },
+  {
+    entry: { events: 'src/events/index.ts' },
+    format: ['esm', 'cjs'],
+    dts: true,
+    sourcemap: true,
+    target: 'es2022',
+    outDir: 'dist',
+    platform: 'neutral',
+    external: ['@microsoft/signalr', /^node:/],
+  },
 ]);

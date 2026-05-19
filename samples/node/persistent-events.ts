@@ -3,13 +3,11 @@
  *
  * Demonstrates the persistent listener that automatically reconnects
  * and refreshes tokens when they expire.
+ * Requires: npm install @microsoft/signalr
  */
-import {
-  PersistentSafeguardEventListener,
-  PasswordAuth,
-  NodeHttpClient,
-  MemoryStorage,
-} from '@oneidentity/safeguard';
+import { PasswordAuth, NodeHttpClient, MemoryStorage } from '@oneidentity/safeguard';
+import { PersistentSafeguardEventListener } from '@oneidentity/safeguard/events';
+import * as signalR from '@microsoft/signalr';
 
 const host = 'safeguard.sample.corp';
 const username = 'MyUser';
@@ -17,24 +15,34 @@ const password = 'MyPassword';
 const provider = 'Local';
 
 async function main() {
-  const listener = new PersistentSafeguardEventListener(host, {
-    auth: new PasswordAuth({ username, password, provider }),
-    httpClient: new NodeHttpClient(),
-    // To disable TLS verification for self-signed certs (dev only):
-    // httpClient: new NodeHttpClient({ rejectUnauthorized: false }),
-    storage: new MemoryStorage(),
+  const auth = new PasswordAuth({ username, password, provider });
+  const httpClient = new NodeHttpClient();
+  // To disable TLS verification for self-signed certs (dev only):
+  // const httpClient = new NodeHttpClient({ rejectUnauthorized: false });
+  const storage = new MemoryStorage();
+
+  // Authenticate to get initial token
+  const tokenSet = await auth.authenticate(host, httpClient, storage);
+
+  // Build SignalR connection
+  const connection = new signalR.HubConnectionBuilder()
+    .withUrl(`https://${host}/service/event/signalr`, {
+      accessTokenFactory: () => tokenSet.accessToken.expose(),
+    })
+    .withAutomaticReconnect()
+    .build();
+
+  // Wrap in persistent listener (handles token refresh on reconnect)
+  const listener = new PersistentSafeguardEventListener(
+    connection, auth, host, httpClient, storage,
+  );
+
+  listener.onStateChange((state) => {
+    console.log('State:', state);
   });
 
   listener.on('NotifyEventAsync', (event) => {
     console.log('Event:', event);
-  });
-
-  listener.on('reconnecting', () => {
-    console.log('Connection lost, reconnecting...');
-  });
-
-  listener.on('reconnected', () => {
-    console.log('Reconnected!');
   });
 
   await listener.start();
@@ -42,6 +50,7 @@ async function main() {
 
   process.on('SIGINT', async () => {
     await listener.stop();
+    httpClient.dispose?.();
     process.exit(0);
   });
 }

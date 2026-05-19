@@ -18,6 +18,16 @@
     "./browser": {
       "types": "./dist/browser.d.ts",
       "default": "./dist/browser.js"
+    },
+    "./events": {
+      "import": {
+        "types": "./dist/events.d.ts",
+        "default": "./dist/events.js"
+      },
+      "require": {
+        "types": "./dist/events.d.cts",
+        "default": "./dist/events.cjs"
+      }
     }
   },
   "main": "./dist/index.cjs",
@@ -64,11 +74,19 @@
   },
   "homepage": "https://github.com/OneIdentity/safeguard.js#readme",
   "dependencies": {
-    "@microsoft/signalr": "^10.0.0",
     "undici": "^8.3.0"
+  },
+  "peerDependencies": {
+    "@microsoft/signalr": "^10.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@microsoft/signalr": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@microsoft/signalr": "^10.0.0",
     "@types/node": "^25.9.0",
     "@typescript-eslint/eslint-plugin": "^8.33.0",
     "@typescript-eslint/parser": "^8.33.0",
