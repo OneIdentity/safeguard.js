@@ -56,6 +56,6 @@ export class NodeHttpClient implements HttpClient {
   }
 
   dispose(): void {
-    void this.#agent.close();
+    this.#agent.close().catch(() => { /* already closed or destroyed */ });
   }
 }
