@@ -47,3 +47,12 @@ export type {
 } from './auth/index.js';
 
 export { SafeguardClient } from './client.js';
+
+export { SafeguardEventListener, PersistentSafeguardEventListener } from './events/index.js';
+export type {
+  EventListenerState,
+  EventHandler,
+  StateChangeHandler,
+  SafeguardEvent,
+  PersistentListenerOptions,
+} from './events/index.js';
