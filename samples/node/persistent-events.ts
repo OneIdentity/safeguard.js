@@ -19,7 +19,9 @@ const provider = 'Local';
 async function main() {
   const listener = new PersistentSafeguardEventListener(host, {
     auth: new PasswordAuth({ username, password, provider }),
-    httpClient: new NodeHttpClient({ rejectUnauthorized: false }),
+    httpClient: new NodeHttpClient(),
+    // To disable TLS verification for self-signed certs (dev only):
+    // httpClient: new NodeHttpClient({ rejectUnauthorized: false }),
     storage: new MemoryStorage(),
   });
 

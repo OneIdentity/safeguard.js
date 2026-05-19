@@ -10,7 +10,8 @@ const host = 'safeguard.sample.corp';
 async function main() {
   const client = new SafeguardClient(host, {
     auth: new AnonymousAuth(),
-    verify: false,
+    // To disable TLS verification for self-signed certs (dev only):
+    // verify: false,
   });
 
   await client.connect();

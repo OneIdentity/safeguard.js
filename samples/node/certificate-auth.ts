@@ -12,7 +12,8 @@ const keyFile = './ssl/client.key';
 async function main() {
   const client = new SafeguardClient(host, {
     auth: new CertificateAuth({ certFile, keyFile }),
-    verify: false,
+    // To disable TLS verification for self-signed certs (dev only):
+    // verify: false,
   });
 
   await client.connect();

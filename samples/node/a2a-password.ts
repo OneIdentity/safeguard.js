@@ -13,7 +13,8 @@ const keyFile = './ssl/a2a-cert.key';
 async function main() {
   const a2a = new A2AClient(host, {
     auth: new CertificateAuth({ certFile, keyFile }),
-    verify: false,
+    // To disable TLS verification for self-signed certs (dev only):
+    // verify: false,
   });
 
   // Retrieve a password

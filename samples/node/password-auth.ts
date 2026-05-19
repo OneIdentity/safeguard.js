@@ -14,7 +14,8 @@ const provider = 'Local';
 async function main() {
   const client = new SafeguardClient(host, {
     auth: new PasswordAuth({ username, password, provider }),
-    verify: false, // Set true or omit for production
+    // To disable TLS verification for self-signed certs (dev only):
+    // verify: false,
   });
 
   await client.connect();
