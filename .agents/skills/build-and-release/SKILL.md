@@ -46,8 +46,15 @@ dist/
 ├── index.cjs         # CJS (Node)
 ├── index.d.cts       # Types (CJS)
 ├── browser.js        # ESM (Browser)
-└── browser.d.ts      # Types (Browser)
+├── browser.d.ts      # Types (Browser)
+├── events.js         # ESM (Events — opt-in subpath)
+├── events.d.ts       # Types (Events ESM)
+├── events.cjs        # CJS (Events)
+└── events.d.cts      # Types (Events CJS)
 ```
+
+**Note:** `events.d.ts` is patched by `scripts/fix-dts.mjs` post-build to import `SecretValue`
+from the main entry (avoids #private nominal type incompatibility between bundles).
 
 ## Pipeline Architecture
 
@@ -62,7 +69,7 @@ pipeline-templates/
 ## Version Derivation
 
 - **Tag build** (`v8.0.0`): → `PackageVersion = "8.0.0"`, `ReleaseTag = "v8.0.0"`
-- **Branch push**: → `PackageVersion = "8.0.0-dev.{buildId}"`, `ReleaseTag = "dev/v8.0.0-dev.{buildId}"`
+- **Branch push**: → `PackageVersion = "8.0.0-pre{buildId}"`, `ReleaseTag = "dev/v8.0.0-pre{buildId}"`
 
 The `versionnumber.ps1` script stamps `package.json` version via `npm pkg set version=X`.
 

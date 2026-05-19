@@ -1,0 +1,62 @@
+// Node.js entry point — exports everything
+export { Service, HttpMethod } from './types.js';
+export type { SafeguardResponse, RequestOptions, SafeguardClientOptions } from './types.js';
+
+export {
+  SafeguardError,
+  ApiError,
+  AuthenticationError,
+  AuthorizationError,
+  NotFoundError,
+  TransportError,
+  ConfigurationError,
+} from './errors.js';
+export type { ApiErrorBody } from './errors.js';
+
+export { SecretValue } from './secret.js';
+
+export {
+  buildServiceUrl,
+  buildRequestUrl,
+  validateHost,
+  base64UrlEncode,
+  generateCodeVerifier,
+  generateCodeChallenge,
+  generateState,
+} from './utils.js';
+
+export { MemoryStorage, BrowserSessionStorage, StorageKeys } from './storage/index.js';
+export type { StorageProvider } from './storage/index.js';
+
+export { NodeHttpClient, BrowserHttpClient } from './http/index.js';
+export type { HttpClient, HttpRequestOptions, HttpResponse, TlsOptions } from './http/index.js';
+
+export {
+  PasswordAuth,
+  CertificateAuth,
+  PkceAuth,
+  PkceNonInteractiveAuth,
+  handlePkceCallback,
+  TokenAuth,
+  AnonymousAuth,
+} from './auth/index.js';
+export type {
+  Auth,
+  TokenSet,
+  PasswordAuthOptions,
+  CertificateAuthOptions,
+  PkceAuthOptions,
+  PkceNonInteractiveAuthOptions,
+  PkceCallbackResult,
+  TokenAuthOptions,
+} from './auth/index.js';
+
+export { SafeguardClient } from './client.js';
+
+export { A2AClient, SshKeyFormat, BrokeredAccessRequestType } from './a2a/index.js';
+export type {
+  A2AClientOptions,
+  RetrievableAccount,
+  BrokeredAccessRequest,
+  BrokeredAccessResponse,
+} from './a2a/index.js';

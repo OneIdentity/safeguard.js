@@ -1,0 +1,49 @@
+// Browser entry point — excludes Node-only modules (CertificateAuth, fs, tls, undici)
+export { Service, HttpMethod } from './types.js';
+export type { SafeguardResponse, RequestOptions, SafeguardClientOptions } from './types.js';
+
+export {
+  SafeguardError,
+  ApiError,
+  AuthenticationError,
+  AuthorizationError,
+  NotFoundError,
+  TransportError,
+  ConfigurationError,
+} from './errors.js';
+export type { ApiErrorBody } from './errors.js';
+
+export { SecretValue } from './secret.js';
+
+export {
+  buildServiceUrl,
+  buildRequestUrl,
+  base64UrlEncode,
+  generateCodeVerifier,
+  generateCodeChallenge,
+  generateState,
+} from './utils.js';
+
+export { MemoryStorage, BrowserSessionStorage, StorageKeys } from './storage/index.js';
+export type { StorageProvider } from './storage/index.js';
+
+export { BrowserHttpClient } from './http/browser.js';
+export type { HttpClient, HttpRequestOptions, HttpResponse } from './http/types.js';
+
+export {
+  PasswordAuth,
+  PkceAuth,
+  handlePkceCallback,
+  TokenAuth,
+  AnonymousAuth,
+} from './auth/index.js';
+export type {
+  Auth,
+  TokenSet,
+  PasswordAuthOptions,
+  PkceAuthOptions,
+  PkceCallbackResult,
+  TokenAuthOptions,
+} from './auth/index.js';
+
+export { SafeguardClient } from './client.js';
