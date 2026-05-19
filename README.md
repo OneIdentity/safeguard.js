@@ -294,30 +294,6 @@ await listener.start();
 The persistent listener automatically checks token lifetime and refreshes
 credentials before they expire (with a 60-second safety margin).
 
-## TLS Configuration
-
-By default, the SDK verifies TLS certificates. For development with
-self-signed certificates:
-
-```typescript
-const client = new SafeguardClient('safeguard.sample.corp', {
-  auth: new PasswordAuth({ username: 'Admin', password: 'Admin123', provider: 'Local' }),
-  verify: false, // Disable TLS verification (development only!)
-});
-```
-
-For production with a custom CA:
-
-```typescript
-import { NodeHttpClient } from '@oneidentity/safeguard';
-
-const client = new SafeguardClient('safeguard.sample.corp', {
-  auth: new PasswordAuth({ username: 'Admin', password: 'Admin123', provider: 'Local' }),
-});
-
-client.setHttpClient(new NodeHttpClient({ ca: '/path/to/ca.pem' }));
-```
-
 ## Security
 
 ### Token Storage (Browser)

@@ -20,18 +20,28 @@ Resolution is automatic via `package.json` conditional exports:
   "exports": {
     ".": {
       "import": {
-        "types": "./dist/esm/index.d.ts",
-        "browser": "./dist/esm/browser.js",
-        "default": "./dist/esm/index.js"
+        "types": "./dist/index.d.ts",
+        "browser": "./dist/browser.js",
+        "default": "./dist/index.js"
       },
       "require": {
-        "types": "./dist/cjs/index.d.cts",
-        "default": "./dist/cjs/index.cjs"
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
       }
+    },
+    "./browser": {
+      "types": "./dist/browser.d.ts",
+      "default": "./dist/browser.js"
+    },
+    "./events": {
+      "import": { "types": "./dist/events.d.ts", "default": "./dist/events.js" },
+      "require": { "types": "./dist/events.d.cts", "default": "./dist/events.cjs" }
     }
   }
 }
 ```
+
+The `./events` subpath is opt-in — consumers who don't use SignalR never install `@microsoft/signalr`.
 
 ## Module Layers (Dependency Graph)
 

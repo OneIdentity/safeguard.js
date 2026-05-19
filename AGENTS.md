@@ -13,16 +13,18 @@ src/
 ├── auth/                 # Auth strategy objects (password, cert, PKCE, token, anonymous)
 ├── a2a/                  # A2AClient (retrieve, set, discover, broker)
 ├── events/               # SafeguardEventListener + PersistentSafeguardEventListener
+│                         # Separate subpath: @oneidentity/safeguard/events (opt-in)
 ├── http/                 # HttpClient abstraction (undici Node, native fetch browser)
 ├── storage/              # StorageProvider (MemoryStorage, BrowserSessionStorage)
 ├── errors.ts             # Error hierarchy (SafeguardError → ApiError → Auth/NotFound/etc)
-├── secret.ts             # SecretValue (masks toString/toJSON)
+├── secret.ts             # SecretValue (masks toString/toJSON, .expose() for raw value)
 ├── types.ts              # Service, HttpMethod, SafeguardResponse enums/interfaces
-└── utils.ts              # URL assembly, crypto helpers
+└── utils.ts              # URL assembly, crypto helpers, host validation
 tests/
 ├── unit/                 # Pure logic tests (no heavy mocking)
 └── integration/          # Live appliance tests (auto-skip when SPP_HOST unset)
 pipeline-templates/       # ADO pipeline YAML (build-steps, global-variables, versionnumber)
+scripts/                  # Post-build helpers (fix-dts.mjs)
 .agents/skills/           # Modular agent context
 samples/                  # Node + Browser TypeScript examples
 ```
@@ -52,8 +54,8 @@ npm run test:integration  # Vitest integration (requires SPP_HOST env var)
 ## Versioning
 
 Do NOT manually edit `version` in package.json. CI stamps version from git tags:
-- Tag `v8.1.0` → publishes `8.1.0` to npm
-- Push to `main` → publishes `8.1.0-dev.{buildId}` prerelease
+- Tag `v8.0.0` → publishes `8.0.0` to npm (latest)
+- Push to `main` → publishes `8.0.0-pre{buildId}` prerelease (npm tag: pre)
 
 ## CI/CD
 
@@ -65,8 +67,11 @@ Do NOT manually edit `version` in package.json. CI stamps version from git tags:
 ## Security
 
 - Never commit secrets, tokens, or credentials
-- Never set `verify: false` in production code (tests may use it against lab appliances)
-- Use SecretValue for any credential field
+- Never set `verify: false` in production code or samples (tests may use it against lab appliances)
+- Use `SecretValue` for any credential field — call `.expose()` only when intentionally needed
+- All auth constructors and `SafeguardClient` validate `host` — reject URLs and path-traversal
+- Tokens live in-memory only (no sessionStorage persistence) — XSS-safe by default
+- `@microsoft/signalr` is an optional peer dependency to reduce supply chain exposure
 
 ## Skill Routing
 

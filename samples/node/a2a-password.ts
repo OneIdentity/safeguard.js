@@ -17,15 +17,14 @@ async function main() {
     // verify: false,
   });
 
-  // Retrieve a password
+  // Retrieve a password (returns SecretValue — call .expose() for raw string)
   const password = await a2a.retrievePassword(apiKey);
-  console.log('Retrieved password:', password.substring(0, 4) + '****');
+  const raw = password.expose();
+  console.log('Retrieved password:', raw.substring(0, 4) + '****');
 
   // List retrievable accounts
   const accounts = await a2a.getRetrievableAccounts();
   console.log('Retrievable accounts:', accounts.length);
-
-  await a2a.disconnect();
 }
 
 main().catch(console.error);
