@@ -4,7 +4,7 @@ import type { Auth, TokenSet } from './auth/types.js';
 import type { HttpClient } from './http/types.js';
 import type { StorageProvider } from './storage/types.js';
 import { MemoryStorage } from './storage/memory.js';
-import { buildRequestUrl } from './utils.js';
+import { buildRequestUrl, validateHost } from './utils.js';
 import { AuthenticationError, ConfigurationError, ApiError } from './errors.js';
 
 const DEFAULT_TIMEOUT = 300_000;
@@ -32,7 +32,7 @@ export class SafeguardClient {
   constructor(host: string, options: SafeguardClientOptions) {
     if (!host) throw new ConfigurationError('SafeguardClient requires a host');
     if (!options.auth) throw new ConfigurationError('SafeguardClient requires an auth strategy');
-    this.#host = host;
+    this.#host = validateHost(host);
     this.#auth = options.auth;
     this.#apiVersion = options.apiVersion ?? DEFAULT_API_VERSION;
     this.#timeout = options.timeout ?? DEFAULT_TIMEOUT;

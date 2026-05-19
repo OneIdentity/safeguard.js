@@ -1,4 +1,43 @@
 import { Service } from './types.js';
+import { ConfigurationError } from './errors.js';
+
+/**
+ * Validates that a host string is a bare hostname or IP address.
+ * Rejects URLs, paths, query strings, userinfo, and embedded ports.
+ *
+ * @throws {ConfigurationError} if the host contains disallowed characters
+ */
+export function validateHost(host: string): string {
+  if (!host) throw new ConfigurationError('Host must not be empty');
+
+  const trimmed = host.trim();
+  if (trimmed !== host) {
+    throw new ConfigurationError('Host must not contain leading or trailing whitespace');
+  }
+
+  // Reject protocol prefixes
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(host)) {
+    throw new ConfigurationError(
+      `Host must be a bare hostname or IP, not a URL. Remove the protocol prefix (e.g., use "${host.replace(/^[a-z][a-z0-9+.-]*:\/\//i, '')}")`,
+    );
+  }
+
+  // Reject path, query, fragment, userinfo characters
+  if (/[/?#@]/.test(host)) {
+    throw new ConfigurationError(
+      'Host must be a bare hostname or IP address — must not contain /, ?, #, or @',
+    );
+  }
+
+  // Reject port suffix (e.g. "host:8443") — SDK always uses HTTPS/443
+  if (/:\d+$/.test(host) && !host.startsWith('[')) {
+    throw new ConfigurationError(
+      'Host must not include a port number. The SDK always connects over HTTPS (port 443).',
+    );
+  }
+
+  return host;
+}
 
 /**
  * Builds the base URL for a Safeguard service endpoint.

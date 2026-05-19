@@ -3,6 +3,7 @@ import { Service } from '../../src/types.js';
 import {
   buildServiceUrl,
   buildRequestUrl,
+  validateHost,
   base64UrlEncode,
   generateCodeVerifier,
   generateCodeChallenge,
@@ -129,5 +130,59 @@ describe('generateState', () => {
     const s1 = generateState();
     const s2 = generateState();
     expect(s1).not.toBe(s2);
+  });
+});
+
+describe('validateHost', () => {
+  it('accepts a valid FQDN', () => {
+    expect(validateHost('appliance.example.com')).toBe('appliance.example.com');
+  });
+
+  it('accepts an IPv4 address', () => {
+    expect(validateHost('192.168.1.100')).toBe('192.168.1.100');
+  });
+
+  it('accepts an IPv6 address in brackets', () => {
+    expect(validateHost('[::1]')).toBe('[::1]');
+  });
+
+  it('accepts a simple hostname', () => {
+    expect(validateHost('safeguard')).toBe('safeguard');
+  });
+
+  it('rejects empty string', () => {
+    expect(() => validateHost('')).toThrow('must not be empty');
+  });
+
+  it('rejects URL with protocol', () => {
+    expect(() => validateHost('https://appliance.example.com')).toThrow('Remove the protocol');
+  });
+
+  it('rejects host with path', () => {
+    expect(() => validateHost('appliance.example.com/api')).toThrow('must not contain');
+  });
+
+  it('rejects host with query string', () => {
+    expect(() => validateHost('appliance.example.com?foo=bar')).toThrow('must not contain');
+  });
+
+  it('rejects host with fragment', () => {
+    expect(() => validateHost('appliance.example.com#section')).toThrow('must not contain');
+  });
+
+  it('rejects host with userinfo', () => {
+    expect(() => validateHost('user@appliance.example.com')).toThrow('must not contain');
+  });
+
+  it('rejects host with port', () => {
+    expect(() => validateHost('appliance.example.com:8443')).toThrow('must not include a port');
+  });
+
+  it('rejects leading whitespace', () => {
+    expect(() => validateHost(' appliance.example.com')).toThrow('whitespace');
+  });
+
+  it('rejects trailing whitespace', () => {
+    expect(() => validateHost('appliance.example.com ')).toThrow('whitespace');
   });
 });

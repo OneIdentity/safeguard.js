@@ -18,6 +18,7 @@ export { SecretValue } from './secret.js';
 export {
   buildServiceUrl,
   buildRequestUrl,
+  validateHost,
   base64UrlEncode,
   generateCodeVerifier,
   generateCodeChallenge,
