@@ -77,3 +77,23 @@ export function generateState(): string {
   crypto.getRandomValues(bytes);
   return base64UrlEncode(bytes);
 }
+
+/**
+ * Extracts the `exp` claim from a JWT and returns expiresIn (seconds from now).
+ * Returns undefined if the token is not a valid JWT or has no `exp` claim.
+ */
+export function getTokenExpiresIn(jwt: string): number | undefined {
+  try {
+    const parts = jwt.split('.');
+    if (parts.length !== 3) return undefined;
+    // Base64url decode the payload
+    const payload = parts[1]!.replace(/-/g, '+').replace(/_/g, '/');
+    const json = atob(payload);
+    const claims = JSON.parse(json) as { exp?: number };
+    if (typeof claims.exp !== 'number') return undefined;
+    const now = Math.floor(Date.now() / 1000);
+    return Math.max(0, claims.exp - now);
+  } catch {
+    return undefined;
+  }
+}

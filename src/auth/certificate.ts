@@ -2,6 +2,7 @@ import type { HttpClient } from '../http/types.js';
 import type { StorageProvider } from '../storage/types.js';
 import type { Auth, TokenSet } from './types.js';
 import { ConfigurationError } from '../errors.js';
+import { getTokenExpiresIn } from '../utils.js';
 
 export interface CertificateAuthOptions {
   /** Path to PEM certificate file, or PEM string. */
@@ -82,16 +83,16 @@ export class CertificateAuth implements Auth {
   }
 
   async #getRstsToken(host: string, httpClient: HttpClient): Promise<string> {
-    const body = new URLSearchParams({
+    const body = JSON.stringify({
       grant_type: 'client_credentials',
-      scope: 'rsts:sts:primaryproviderid:' + this.#provider,
+      scope: 'rsts:sts:primaryproviderid:' + this.#provider.toLowerCase(),
     });
 
     const response = await httpClient.request({
       url: `https://${host}/RSTS/oauth2/token`,
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: body.toString(),
+      headers: { 'Content-Type': 'application/json' },
+      body,
     });
 
     if (response.status !== 200) {
@@ -124,7 +125,12 @@ export class CertificateAuth implements Auth {
       accessToken: data.UserToken,
       acquiredAt: Date.now(),
     };
-    if (data.ExpiresIn != null) tokenSet.expiresIn = data.ExpiresIn;
+    if (data.ExpiresIn != null) {
+      tokenSet.expiresIn = data.ExpiresIn;
+    } else {
+      const expiresIn = getTokenExpiresIn(data.UserToken);
+      if (expiresIn != null) tokenSet.expiresIn = expiresIn;
+    }
     return tokenSet;
   }
 }
