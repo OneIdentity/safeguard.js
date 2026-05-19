@@ -4,6 +4,7 @@ import { PersistentSafeguardEventListener } from '../../../src/events/persistent
 import type { EventListenerState } from '../../../src/events/types.js';
 import type { Auth, TokenSet } from '../../../src/auth/types.js';
 import type { HttpClient, HttpResponse } from '../../../src/http/types.js';
+import { SecretValue } from '../../../src/secret.js';
 import { MemoryStorage } from '../../../src/storage/memory.js';
 
 // Minimal mock of SignalR HubConnection
@@ -34,12 +35,12 @@ function createMockAuth(): Auth {
   return {
     description: 'MockAuth',
     authenticate: vi.fn(async (): Promise<TokenSet> => ({
-      accessToken: 'tok',
+      accessToken: new SecretValue('tok'),
       expiresIn: 3600,
       acquiredAt: Date.now(),
     })),
     refreshToken: vi.fn(async (): Promise<TokenSet | null> => ({
-      accessToken: 'refreshed-tok',
+      accessToken: new SecretValue('refreshed-tok'),
       expiresIn: 3600,
       acquiredAt: Date.now(),
     })),
@@ -220,7 +221,7 @@ describe('PersistentSafeguardEventListener', () => {
 
   it('skips token refresh when token is still valid', async () => {
     const freshToken: TokenSet = {
-      accessToken: 'still-valid',
+      accessToken: new SecretValue('still-valid'),
       expiresIn: 3600,
       acquiredAt: Date.now(), // just acquired — won't expire for an hour
     };
@@ -249,7 +250,7 @@ describe('PersistentSafeguardEventListener', () => {
 
   it('refreshes token when near expiry on reconnect', async () => {
     const expiredToken: TokenSet = {
-      accessToken: 'old',
+      accessToken: new SecretValue('old'),
       expiresIn: 300, // 5 min lifetime
       acquiredAt: Date.now() - 300_000, // acquired 5 min ago — expired
     };

@@ -1,6 +1,7 @@
 import type { HttpClient } from '../http/types.js';
 import type { StorageProvider } from '../storage/types.js';
 import type { Auth, TokenSet } from './types.js';
+import { SecretValue } from '../secret.js';
 
 /**
  * Anonymous authentication — no credentials.
@@ -13,7 +14,7 @@ export class AnonymousAuth implements Auth {
 
   async authenticate(_host: string, _httpClient: HttpClient, _storage: StorageProvider): Promise<TokenSet> {
     return {
-      accessToken: '',
+      accessToken: new SecretValue(''),
       acquiredAt: Date.now(),
     };
   }

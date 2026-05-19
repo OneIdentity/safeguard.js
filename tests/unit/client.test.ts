@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { SafeguardClient } from '../../src/client.js';
 import { Service, HttpMethod } from '../../src/types.js';
 import { ConfigurationError, AuthenticationError } from '../../src/errors.js';
+import { SecretValue } from '../../src/secret.js';
 import type { Auth, TokenSet } from '../../src/auth/types.js';
 import type { HttpClient, HttpResponse } from '../../src/http/types.js';
 
@@ -9,7 +10,7 @@ function createMockAuth(token = 'mock-token', expiresIn = 3600): Auth {
   return {
     description: 'MockAuth',
     authenticate: vi.fn(async (): Promise<TokenSet> => ({
-      accessToken: token,
+      accessToken: new SecretValue(token),
       expiresIn,
       acquiredAt: Date.now(),
     })),
@@ -69,7 +70,7 @@ describe('SafeguardClient', () => {
     it('throws if auth returns empty token', async () => {
       const auth: Auth = {
         description: 'EmptyAuth',
-        authenticate: async () => ({ accessToken: '', acquiredAt: Date.now() }),
+        authenticate: async () => ({ accessToken: new SecretValue(''), acquiredAt: Date.now() }),
       };
       const client = new SafeguardClient('h', { auth });
       client.setHttpClient(createMockHttpClient());
@@ -156,7 +157,7 @@ describe('SafeguardClient', () => {
     it('returns -1 when no expiresIn', async () => {
       const auth: Auth = {
         description: 'NoExpiry',
-        authenticate: async () => ({ accessToken: 'tok', acquiredAt: Date.now() }),
+        authenticate: async () => ({ accessToken: new SecretValue('tok'), acquiredAt: Date.now() }),
       };
       const client = new SafeguardClient('h', { auth });
       client.setHttpClient(createMockHttpClient());
@@ -168,7 +169,7 @@ describe('SafeguardClient', () => {
       const auth: Auth = {
         description: 'Expiring',
         authenticate: async () => ({
-          accessToken: 'tok',
+          accessToken: new SecretValue('tok'),
           expiresIn: 3600,
           acquiredAt: Date.now(),
         }),
@@ -187,12 +188,12 @@ describe('SafeguardClient', () => {
       const auth = createMockAuth('initial', 3600);
       // Simulate token acquired 3550s ago (only 50s remaining, below 60s margin)
       (auth.authenticate as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-        accessToken: 'initial',
+        accessToken: new SecretValue('initial'),
         expiresIn: 3600,
         acquiredAt: Date.now() - 3550_000,
       });
       (auth.authenticate as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-        accessToken: 'refreshed',
+        accessToken: new SecretValue('refreshed'),
         expiresIn: 3600,
         acquiredAt: Date.now(),
       });
@@ -208,7 +209,7 @@ describe('SafeguardClient', () => {
     it('skips refresh when autoRefresh is false', async () => {
       const auth = createMockAuth('initial', 3600);
       (auth.authenticate as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-        accessToken: 'initial',
+        accessToken: new SecretValue('initial'),
         expiresIn: 3600,
         acquiredAt: Date.now() - 3550_000,
       });

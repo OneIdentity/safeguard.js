@@ -2,6 +2,7 @@ import type { HttpClient } from '../http/types.js';
 import type { StorageProvider } from '../storage/types.js';
 import type { Auth, TokenSet } from './types.js';
 import { ConfigurationError } from '../errors.js';
+import { SecretValue } from '../secret.js';
 import { getTokenExpiresIn } from '../utils.js';
 
 export interface CertificateAuthOptions {
@@ -34,7 +35,7 @@ export class CertificateAuth implements Auth {
   readonly #key: string | Buffer | undefined;
   readonly #pfxFile: string | undefined;
   readonly #pfx: string | Buffer | undefined;
-  readonly #passphrase: string | undefined;
+  readonly #passphrase: SecretValue | undefined;
   readonly #provider: string;
 
   constructor(options: CertificateAuthOptions) {
@@ -49,7 +50,7 @@ export class CertificateAuth implements Auth {
     this.#key = options.key;
     this.#pfxFile = options.pfxFile;
     this.#pfx = options.pfx;
-    this.#passphrase = options.passphrase;
+    this.#passphrase = options.passphrase ? new SecretValue(options.passphrase) : undefined;
     this.#provider = options.provider ?? 'certificate';
   }
 
@@ -66,7 +67,7 @@ export class CertificateAuth implements Auth {
       opts.cert = this.#cert ?? this.#certFile!;
       opts.key = this.#key ?? this.#keyFile!;
     }
-    if (this.#passphrase) opts.passphrase = this.#passphrase;
+    if (this.#passphrase) opts.passphrase = this.#passphrase.expose();
     return opts;
   }
 
@@ -122,7 +123,7 @@ export class CertificateAuth implements Auth {
 
     const data = JSON.parse(response.body) as { UserToken: string; ExpiresIn?: number };
     const tokenSet: TokenSet = {
-      accessToken: data.UserToken,
+      accessToken: new SecretValue(data.UserToken),
       acquiredAt: Date.now(),
     };
     if (data.ExpiresIn != null) {

@@ -2,6 +2,7 @@ import type { HttpClient } from '../http/types.js';
 import type { StorageProvider } from '../storage/types.js';
 import type { Auth, TokenSet } from './types.js';
 import { ConfigurationError } from '../errors.js';
+import { SecretValue } from '../secret.js';
 import { getTokenExpiresIn } from '../utils.js';
 
 export interface PasswordAuthOptions {
@@ -16,7 +17,7 @@ export interface PasswordAuthOptions {
  */
 export class PasswordAuth implements Auth {
   readonly #username: string;
-  readonly #password: string;
+  readonly #password: SecretValue;
   readonly #provider: string;
 
   constructor(options: PasswordAuthOptions) {
@@ -24,7 +25,7 @@ export class PasswordAuth implements Auth {
     if (!options.password) throw new ConfigurationError('PasswordAuth requires password');
     if (!options.provider) throw new ConfigurationError('PasswordAuth requires provider');
     this.#username = options.username;
-    this.#password = options.password;
+    this.#password = new SecretValue(options.password);
     this.#provider = options.provider;
   }
 
@@ -51,7 +52,7 @@ export class PasswordAuth implements Auth {
     const body = JSON.stringify({
       grant_type: 'password',
       username: this.#username,
-      password: this.#password,
+      password: this.#password.expose(),
       scope: 'rsts:sts:primaryproviderid:' + this.#provider.toLowerCase(),
     });
 
@@ -89,7 +90,7 @@ export class PasswordAuth implements Auth {
 
     const data = JSON.parse(response.body) as { UserToken: string; ExpiresIn?: number };
     const tokenSet: TokenSet = {
-      accessToken: data.UserToken,
+      accessToken: new SecretValue(data.UserToken),
       acquiredAt: Date.now(),
     };
     if (data.ExpiresIn != null) {

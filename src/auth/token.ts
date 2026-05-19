@@ -2,6 +2,7 @@ import type { HttpClient } from '../http/types.js';
 import type { StorageProvider } from '../storage/types.js';
 import type { Auth, TokenSet } from './types.js';
 import { ConfigurationError } from '../errors.js';
+import { SecretValue } from '../secret.js';
 
 export interface TokenAuthOptions {
   /** Pre-existing Safeguard access token. */
@@ -13,11 +14,11 @@ export interface TokenAuthOptions {
  * Useful when tokens are obtained externally or for service-to-service scenarios.
  */
 export class TokenAuth implements Auth {
-  readonly #accessToken: string;
+  readonly #accessToken: SecretValue;
 
   constructor(options: TokenAuthOptions) {
     if (!options.accessToken) throw new ConfigurationError('TokenAuth requires accessToken');
-    this.#accessToken = options.accessToken;
+    this.#accessToken = new SecretValue(options.accessToken);
   }
 
   get description(): string {

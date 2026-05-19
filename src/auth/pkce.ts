@@ -2,6 +2,7 @@ import type { HttpClient } from '../http/types.js';
 import type { StorageProvider } from '../storage/types.js';
 import type { Auth, TokenSet } from './types.js';
 import { ConfigurationError } from '../errors.js';
+import { SecretValue } from '../secret.js';
 import { StorageKeys } from '../storage/types.js';
 import { generateCodeVerifier, generateCodeChallenge, generateState } from '../utils.js';
 
@@ -131,7 +132,7 @@ export class PkceAuth implements Auth {
 
     const userData = JSON.parse(userTokenResponse.body) as { UserToken: string; ExpiresIn?: number };
     const tokenSet: TokenSet = {
-      accessToken: userData.UserToken,
+      accessToken: new SecretValue(userData.UserToken),
       acquiredAt: Date.now(),
     };
     if (userData.ExpiresIn != null) tokenSet.expiresIn = userData.ExpiresIn;

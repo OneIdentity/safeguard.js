@@ -100,7 +100,7 @@ export class SafeguardClient {
     }
 
     this.#tokenSet = await this.#auth.authenticate(this.#host, this.#httpClient, this.#storage);
-    if (!this.#tokenSet.accessToken) {
+    if (!this.#tokenSet.accessToken.expose()) {
       throw new AuthenticationError('Authentication returned empty access token');
     }
     this.#connected = true;
@@ -171,7 +171,7 @@ export class SafeguardClient {
 
     const url = buildRequestUrl(this.#host, service, relativeUrl, options?.query);
     const headers: Record<string, string> = {
-      Authorization: `Bearer ${this.#tokenSet!.accessToken}`,
+      Authorization: `Bearer ${this.#tokenSet!.accessToken.expose()}`,
       Accept: 'application/json',
       ...options?.headers,
     };

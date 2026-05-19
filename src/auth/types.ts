@@ -1,12 +1,13 @@
 import type { HttpClient } from '../http/types.js';
 import type { StorageProvider } from '../storage/types.js';
+import type { SecretValue } from '../secret.js';
 
 /**
  * Token set returned by authentication.
  */
 export interface TokenSet {
-  /** The Safeguard user access token. */
-  accessToken: string;
+  /** The Safeguard user access token (wrapped to prevent accidental logging). */
+  accessToken: SecretValue;
   /** Token lifetime in seconds from when it was issued. */
   expiresIn?: number;
   /** Timestamp (ms since epoch) when the token was acquired. */

@@ -47,7 +47,7 @@ async function getAccessToken(e: IntegrationEnv): Promise<string> {
   const storage = new MemoryStorage();
   const tokenSet = await auth.authenticate(e.host, httpClient, storage);
   httpClient.dispose?.();
-  return tokenSet.accessToken;
+  return tokenSet.accessToken.expose();
 }
 
 describe('Event Listener', () => {
