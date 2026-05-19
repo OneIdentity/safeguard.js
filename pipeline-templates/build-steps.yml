@@ -1,7 +1,7 @@
 steps:
-  - task: NodeTool@0
+  - task: UseNode@1
     inputs:
-      versionSpec: '22.x'
+      version: '22.x'
     displayName: 'Install Node.js 22 LTS'
 
   - script: npm ci
@@ -44,7 +44,7 @@ steps:
         LICENSE
       TargetFolder: '$(Build.ArtifactStagingDirectory)'
 
-  - task: PublishPipelineArtifact@0
+  - task: PublishPipelineArtifact@1
     displayName: 'Publish artifact'
     inputs:
       artifactName: 'drop'
