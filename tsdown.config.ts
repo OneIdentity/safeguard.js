@@ -28,6 +28,6 @@ export default defineConfig([
     target: 'es2022',
     outDir: 'dist',
     platform: 'neutral',
-    external: ['@microsoft/signalr'],
+    external: ['@microsoft/signalr', /^node:/],
   },
 ]);
