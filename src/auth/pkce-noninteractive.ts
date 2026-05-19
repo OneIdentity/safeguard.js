@@ -164,14 +164,15 @@ export class PkceNonInteractiveAuth implements Auth {
 
   async #openBrowser(url: string): Promise<void> {
     const { platform } = await import('node:os');
-    const { exec } = await import('node:child_process');
+    const { execFile } = await import('node:child_process');
 
-    const command = platform() === 'win32'
-      ? `start "" "${url}"`
-      : platform() === 'darwin'
-        ? `open "${url}"`
-        : `xdg-open "${url}"`;
-
-    exec(command);
+    // Use execFile with argument arrays to prevent shell injection via host parameter
+    if (platform() === 'win32') {
+      execFile('cmd', ['/c', 'start', '', url]);
+    } else if (platform() === 'darwin') {
+      execFile('open', [url]);
+    } else {
+      execFile('xdg-open', [url]);
+    }
   }
 }
