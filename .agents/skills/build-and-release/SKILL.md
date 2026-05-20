@@ -1,6 +1,6 @@
 ---
 name: build-and-release
-description: tsdown configuration, ADO pipeline-templates, npm publish workflow, version derivation
+description: Use when changing tsdown config, Azure Pipelines, publishing flow, or version derivation.
 trigger: Pipeline changes, publishing, versioning, build issues, tsdown config, npm pack
 ---
 

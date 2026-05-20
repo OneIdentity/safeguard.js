@@ -1,6 +1,6 @@
 ---
 name: architecture
-description: Module architecture, conditional exports, platform detection, auth strategy internals, HTTP layer
+description: Use when changing module structure, auth internals, conditional exports, or the HTTP and storage layers.
 trigger: Working on internals, auth strategies, HTTP layer, module structure, platform-specific code
 ---
 
