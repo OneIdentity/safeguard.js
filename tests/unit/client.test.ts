@@ -101,20 +101,33 @@ describe('SafeguardClient', () => {
       const disconnected = new SafeguardClient('h', { auth: createMockAuth() });
       disconnected.setHttpClient(createMockHttpClient());
       await expect(
-        disconnected.invoke(Service.CORE, HttpMethod.GET, 'v4/Me'),
+        disconnected.invoke(Service.CORE, HttpMethod.GET, 'Me'),
       ).rejects.toThrow('not connected');
     });
 
     it('sends GET with Authorization header', async () => {
-      await client.get(Service.CORE, 'v4/Me');
+      await client.get(Service.CORE, 'Me');
       const call = (httpClient.request as ReturnType<typeof vi.fn>).mock.calls[0]![0];
       expect(call.url).toBe('https://appliance.example.com/service/core/v4/Me');
       expect(call.method).toBe('GET');
       expect(call.headers.Authorization).toMatch(/^Bearer /);
     });
 
+    it('uses the configured api version in request URLs', async () => {
+      const versionedClient = new SafeguardClient('appliance.example.com', {
+        auth: createMockAuth(),
+        apiVersion: 'v3',
+      });
+      versionedClient.setHttpClient(httpClient);
+      await versionedClient.connect();
+
+      await versionedClient.get(Service.CORE, 'Me');
+      const call = (httpClient.request as ReturnType<typeof vi.fn>).mock.calls.at(-1)![0];
+      expect(call.url).toBe('https://appliance.example.com/service/core/v3/Me');
+    });
+
     it('sends POST with JSON body', async () => {
-      await client.post(Service.CORE, 'v4/Users', { json: { Name: 'New' } });
+      await client.post(Service.CORE, 'Users', { json: { Name: 'New' } });
       const call = (httpClient.request as ReturnType<typeof vi.fn>).mock.calls[0]![0];
       expect(call.method).toBe('POST');
       expect(call.headers['Content-Type']).toBe('application/json');
@@ -122,18 +135,18 @@ describe('SafeguardClient', () => {
     });
 
     it('appends query parameters', async () => {
-      await client.get(Service.CORE, 'v4/Users', { query: { filter: 'Name eq "x"' } });
+      await client.get(Service.CORE, 'Users', { query: { filter: 'Name eq "x"' } });
       const call = (httpClient.request as ReturnType<typeof vi.fn>).mock.calls[0]![0];
       expect(call.url).toContain('filter=Name');
     });
 
     it('returns parsed JSON body by default', async () => {
-      const result = await client.get<{ Id: number }>(Service.CORE, 'v4/Me');
+      const result = await client.get<{ Id: number }>(Service.CORE, 'Me');
       expect(result).toEqual({ Id: 1, Name: 'Admin' });
     });
 
     it('returns full response when fullResponse: true', async () => {
-      const result = await client.invoke(Service.CORE, HttpMethod.GET, 'v4/Me', {
+      const result = await client.invoke(Service.CORE, HttpMethod.GET, 'Me', {
         fullResponse: true,
       });
       expect(result).toHaveProperty('data');
@@ -149,7 +162,7 @@ describe('SafeguardClient', () => {
       const c = new SafeguardClient('h', { auth: createMockAuth() });
       c.setHttpClient(errorClient);
       await c.connect();
-      await expect(c.get(Service.CORE, 'v4/Bogus')).rejects.toThrow();
+      await expect(c.get(Service.CORE, 'Bogus')).rejects.toThrow();
     });
   });
 
@@ -201,7 +214,7 @@ describe('SafeguardClient', () => {
       const client = new SafeguardClient('h', { auth, autoRefresh: true });
       client.setHttpClient(createMockHttpClient());
       await client.connect();
-      await client.get(Service.CORE, 'v4/Me');
+      await client.get(Service.CORE, 'Me');
 
       expect(auth.authenticate).toHaveBeenCalledTimes(2);
     });
@@ -217,7 +230,7 @@ describe('SafeguardClient', () => {
       const client = new SafeguardClient('h', { auth, autoRefresh: false });
       client.setHttpClient(createMockHttpClient());
       await client.connect();
-      await client.get(Service.CORE, 'v4/Me');
+      await client.get(Service.CORE, 'Me');
 
       expect(auth.authenticate).toHaveBeenCalledTimes(1);
     });

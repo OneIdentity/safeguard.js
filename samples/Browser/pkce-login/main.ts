@@ -31,6 +31,6 @@ document.getElementById('login')?.addEventListener('click', async () => {
 
   await client.connect();
 
-  const me = await client.get(Service.CORE, 'v4/Me');
+  const me = await client.get(Service.CORE, 'Me');
   document.getElementById('output')!.textContent = JSON.stringify(me, null, 2);
 });

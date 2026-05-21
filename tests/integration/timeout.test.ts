@@ -25,14 +25,14 @@ describe('Request Timeout', () => {
 
   it('throws on impossibly short timeout (1ms)', async () => {
     await expect(
-      client.get(Service.CORE, 'v4/Me', { timeout: 1 }),
+      client.get(Service.CORE, 'Me', { timeout: 1 }),
     ).rejects.toThrow();
   });
 
   it('succeeds with generous timeout', async () => {
     const me = await client.get<{ Id: number }>(
       Service.CORE,
-      'v4/Me',
+      'Me',
       { timeout: 30_000 },
     );
     expect(me.Id).toBeDefined();
@@ -41,11 +41,11 @@ describe('Request Timeout', () => {
   it('per-request timeout does not affect subsequent requests', async () => {
     // First request with very short timeout should fail
     await expect(
-      client.get(Service.CORE, 'v4/Me', { timeout: 1 }),
+      client.get(Service.CORE, 'Me', { timeout: 1 }),
     ).rejects.toThrow();
 
     // Subsequent request with default timeout should succeed
-    const me = await client.get<{ Id: number }>(Service.CORE, 'v4/Me');
+    const me = await client.get<{ Id: number }>(Service.CORE, 'Me');
     expect(me.Id).toBeDefined();
   });
 });

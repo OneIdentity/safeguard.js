@@ -169,7 +169,7 @@ export class SafeguardClient {
       await this.#ensureValidToken();
     }
 
-    const url = buildRequestUrl(this.#host, service, relativeUrl, options?.query);
+    const url = buildRequestUrl(this.#host, service, relativeUrl, options?.query, this.#apiVersion);
     const headers: Record<string, string> = {
       Authorization: `Bearer ${this.#tokenSet!.accessToken.expose()}`,
       Accept: 'application/json',
