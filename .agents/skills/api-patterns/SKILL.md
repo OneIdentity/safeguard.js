@@ -1,6 +1,6 @@
 ---
 name: api-patterns
-description: Service enum, URL construction, auth strategies, error handling, SDK usage patterns
+description: Use when making Safeguard API calls, wiring auth strategies, or following SDK request and response patterns.
 trigger: Making Safeguard API calls, SDK usage, understanding request/response patterns
 ---
 

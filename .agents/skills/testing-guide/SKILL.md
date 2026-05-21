@@ -1,6 +1,6 @@
 ---
 name: testing-guide
-description: Vitest configuration, environment variables, integration test patterns, fixtures, and appliance setup
+description: Use when working on Vitest configuration, appliance-backed tests, fixtures, or debugging test failures.
 trigger: Working on tests, test failures, appliance setup, debugging test output
 ---
 
