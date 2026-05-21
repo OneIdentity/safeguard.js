@@ -32,7 +32,7 @@ describe('User Management', () => {
     it('creates a local user', async () => {
       const user = await client.post<{ Id: number; Name: string }>(
         Service.CORE,
-        'v4/Users',
+        'Users',
         {
           json: {
             Name: userName,
@@ -47,7 +47,7 @@ describe('User Management', () => {
       cleanup.register(async () => {
         if (userId) {
           try {
-            await client.delete(Service.CORE, `v4/Users/${userId}`);
+            await client.delete(Service.CORE, `Users/${userId}`);
           } catch { /* best effort */ }
         }
       });
@@ -57,7 +57,7 @@ describe('User Management', () => {
       expect(userId).toBeDefined();
       const users = await client.get<Array<{ Id: number; Name: string }>>(
         Service.CORE,
-        'v4/Users',
+        'Users',
         { query: { filter: `Name eq '${userName}'` } },
       );
       expect(users.length).toBe(1);
@@ -68,7 +68,7 @@ describe('User Management', () => {
       expect(userId).toBeDefined();
       const updated = await client.put<{ Id: number; Description: string }>(
         Service.CORE,
-        `v4/Users/${userId}`,
+        `Users/${userId}`,
         {
           json: {
             Id: userId,
@@ -83,11 +83,11 @@ describe('User Management', () => {
 
     it('deletes the user', async () => {
       expect(userId).toBeDefined();
-      await client.delete(Service.CORE, `v4/Users/${userId}`);
+      await client.delete(Service.CORE, `Users/${userId}`);
       // Verify gone
       const users = await client.get<Array<{ Id: number }>>(
         Service.CORE,
-        'v4/Users',
+        'Users',
         { query: { filter: `Name eq '${userName}'` } },
       );
       expect(users.length).toBe(0);
@@ -104,7 +104,7 @@ describe('User Management', () => {
         const name = uniqueName(`Batch${i}`);
         const user = await client.post<{ Id: number; Name: string }>(
           Service.CORE,
-          'v4/Users',
+          'Users',
           {
             json: {
               Name: name,
@@ -122,7 +122,7 @@ describe('User Management', () => {
     it('lists all created users', async () => {
       const allUsers = await client.get<Array<{ Id: number; Name: string }>>(
         Service.CORE,
-        'v4/Users',
+        'Users',
       );
       for (const id of userIds) {
         expect(allUsers.find((u) => u.Id === id)).toBeDefined();
@@ -131,13 +131,13 @@ describe('User Management', () => {
 
     it('cleans up batch users', async () => {
       for (const id of userIds) {
-        await client.delete(Service.CORE, `v4/Users/${id}`);
+        await client.delete(Service.CORE, `Users/${id}`);
       }
       // Verify all gone
       for (const name of userNames) {
         const remaining = await client.get<Array<{ Id: number }>>(
           Service.CORE,
-          'v4/Users',
+          'Users',
           { query: { filter: `Name eq '${name}'` } },
         );
         expect(remaining.length).toBe(0);

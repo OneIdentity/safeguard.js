@@ -21,7 +21,7 @@ async function main() {
   await client.connect();
   console.log('Connected!');
 
-  const me = await client.get<{ DisplayName: string }>(Service.CORE, 'v4/Me');
+  const me = await client.get<{ DisplayName: string }>(Service.CORE, 'Me');
   console.log('Current user:', me.DisplayName);
 
   const remaining = client.getAccessTokenLifetimeRemaining();

@@ -25,7 +25,7 @@ describe('Concurrent Requests', () => {
 
   it('handles 5 parallel GET requests', async () => {
     const requests = Array.from({ length: 5 }, () =>
-      client.get<{ Id: number; Name: string }>(Service.CORE, 'v4/Me'),
+      client.get<{ Id: number; Name: string }>(Service.CORE, 'Me'),
     );
     const results = await Promise.all(requests);
     expect(results).toHaveLength(5);
@@ -37,11 +37,11 @@ describe('Concurrent Requests', () => {
 
   it('handles mixed endpoint parallel requests', async () => {
     const [me, users, status, providers, settings] = await Promise.all([
-      client.get<{ Id: number }>(Service.CORE, 'v4/Me'),
-      client.get<Array<{ Id: number }>>(Service.CORE, 'v4/Users'),
-      client.get<{ ApplianceCurrentState: string }>(Service.NOTIFICATION, 'v4/Status'),
-      client.get<Array<{ Id: number }>>(Service.CORE, 'v4/AuthenticationProviders'),
-      client.get<Array<{ Name: string }>>(Service.CORE, 'v4/Settings'),
+      client.get<{ Id: number }>(Service.CORE, 'Me'),
+      client.get<Array<{ Id: number }>>(Service.CORE, 'Users'),
+      client.get<{ ApplianceCurrentState: string }>(Service.NOTIFICATION, 'Status'),
+      client.get<Array<{ Id: number }>>(Service.CORE, 'AuthenticationProviders'),
+      client.get<Array<{ Name: string }>>(Service.CORE, 'Settings'),
     ]);
     expect(me.Id).toBeDefined();
     expect(users.length).toBeGreaterThan(0);
@@ -52,7 +52,7 @@ describe('Concurrent Requests', () => {
 
   it('handles 10 rapid sequential requests without error', async () => {
     for (let i = 0; i < 10; i++) {
-      const me = await client.get<{ Id: number }>(Service.CORE, 'v4/Me');
+      const me = await client.get<{ Id: number }>(Service.CORE, 'Me');
       expect(me.Id).toBeDefined();
     }
   });

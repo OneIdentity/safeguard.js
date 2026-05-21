@@ -13,13 +13,13 @@ import {
 describe('buildServiceUrl', () => {
   it('builds core service URL', () => {
     expect(buildServiceUrl('sg.example.com', Service.CORE)).toBe(
-      'https://sg.example.com/service/core',
+      'https://sg.example.com/service/core/v4',
     );
   });
 
   it('builds appliance service URL', () => {
     expect(buildServiceUrl('sg.example.com', Service.APPLIANCE)).toBe(
-      'https://sg.example.com/service/appliance',
+      'https://sg.example.com/service/appliance/v4',
     );
   });
 
@@ -31,24 +31,30 @@ describe('buildServiceUrl', () => {
 
   it('builds notification service URL', () => {
     expect(buildServiceUrl('sg.example.com', Service.NOTIFICATION)).toBe(
-      'https://sg.example.com/service/notification',
+      'https://sg.example.com/service/notification/v4',
+    );
+  });
+
+  it('builds service URL with custom api version', () => {
+    expect(buildServiceUrl('sg.example.com', Service.CORE, 'v3')).toBe(
+      'https://sg.example.com/service/core/v3',
     );
   });
 });
 
 describe('buildRequestUrl', () => {
   it('builds full URL with relative path', () => {
-    const url = buildRequestUrl('sg.example.com', Service.CORE, 'v4/Users');
+    const url = buildRequestUrl('sg.example.com', Service.CORE, 'Users');
     expect(url).toBe('https://sg.example.com/service/core/v4/Users');
   });
 
   it('handles leading slash in relative URL', () => {
-    const url = buildRequestUrl('sg.example.com', Service.CORE, '/v4/Users');
+    const url = buildRequestUrl('sg.example.com', Service.CORE, '/Users');
     expect(url).toBe('https://sg.example.com/service/core/v4/Users');
   });
 
   it('includes query parameters', () => {
-    const url = buildRequestUrl('sg.example.com', Service.CORE, 'v4/Users', {
+    const url = buildRequestUrl('sg.example.com', Service.CORE, 'Users', {
       filter: 'Name eq "admin"',
       count: 10,
     });
@@ -58,11 +64,16 @@ describe('buildRequestUrl', () => {
   });
 
   it('handles boolean query parameter', () => {
-    const url = buildRequestUrl('sg.example.com', Service.CORE, 'v4/Users', {
+    const url = buildRequestUrl('sg.example.com', Service.CORE, 'Users', {
       includeDeleted: true,
     });
     const parsed = new URL(url);
     expect(parsed.searchParams.get('includeDeleted')).toBe('true');
+  });
+
+  it('passes through a custom api version', () => {
+    const url = buildRequestUrl('sg.example.com', Service.CORE, 'Users', undefined, 'v3');
+    expect(url).toBe('https://sg.example.com/service/core/v3/Users');
   });
 
   it('works with RSTS service', () => {

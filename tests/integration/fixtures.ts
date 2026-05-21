@@ -61,7 +61,7 @@ export async function ensureResourceOwnerGrant(client: SafeguardClient): Promise
   // Just do a quick health check to confirm the appliance is responsive.
   const response = await client.get<{ ApplianceCurrentState?: string }>(
     Service.NOTIFICATION,
-    'v4/Status',
+    'Status',
   );
   if (response.ApplianceCurrentState !== 'Online') {
     throw new Error(

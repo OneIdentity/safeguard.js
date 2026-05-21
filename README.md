@@ -76,7 +76,7 @@ const client = new SafeguardClient('safeguard.sample.corp', {
 
 await client.connect();
 
-const me = await client.get(Service.CORE, 'v4/Me');
+const me = await client.get(Service.CORE, 'Me');
 console.log(me);
 
 await client.disconnect();
@@ -97,7 +97,7 @@ const client = new SafeguardClient('safeguard.sample.corp', {
 
 await client.connect(); // Redirects to Safeguard login if no stored tokens
 
-const me = await client.get(Service.CORE, 'v4/Me');
+const me = await client.get(Service.CORE, 'Me');
 console.log(me);
 ```
 
@@ -117,7 +117,7 @@ const client = new SafeguardClient('safeguard.sample.corp', {
 });
 
 await client.connect();
-const me = await client.get(Service.CORE, 'v4/Me');
+const me = await client.get(Service.CORE, 'Me');
 await client.disconnect();
 ```
 
@@ -135,7 +135,7 @@ const client = new SafeguardClient('safeguard.sample.corp', {
 });
 
 await client.connect();
-const me = await client.get(Service.CORE, 'v4/Me');
+const me = await client.get(Service.CORE, 'Me');
 await client.disconnect();
 ```
 
@@ -149,7 +149,7 @@ const client = new SafeguardClient('safeguard.sample.corp', {
 });
 
 await client.connect();
-const status = await client.get(Service.NOTIFICATION, 'v4/Status');
+const status = await client.get(Service.NOTIFICATION, 'Status');
 console.log(status);
 ```
 
@@ -163,34 +163,34 @@ const client = new SafeguardClient('safeguard.sample.corp', {
 });
 
 await client.connect();
-const me = await client.get(Service.CORE, 'v4/Me');
+const me = await client.get(Service.CORE, 'Me');
 ```
 
 ## Calling the API
 
-The client provides typed HTTP methods:
+The client provides typed HTTP methods. Pass relative paths only — the SDK prepends the configured API version automatically (`v4` by default):
 
 ```typescript
 // GET
-const users = await client.get(Service.CORE, 'v4/Users');
+const users = await client.get(Service.CORE, 'Users');
 
 // GET with query parameters
-const filtered = await client.get(Service.CORE, 'v4/Users', {
+const filtered = await client.get(Service.CORE, 'Users', {
   query: { filter: "Name eq 'Admin'", fields: 'Id,Name' },
 });
 
 // POST (create)
-const newUser = await client.post(Service.CORE, 'v4/Users', {
+const newUser = await client.post(Service.CORE, 'Users', {
   json: { Name: 'newuser', PrimaryAuthenticationProvider: { Id: -1 } },
 });
 
 // PUT (update)
-await client.put(Service.CORE, `v4/Users/${newUser.Id}/Password`, {
+await client.put(Service.CORE, `Users/${newUser.Id}/Password`, {
   json: 'NewPassword123',
 });
 
 // DELETE
-await client.delete(Service.CORE, `v4/Users/${newUser.Id}`);
+await client.delete(Service.CORE, `Users/${newUser.Id}`);
 ```
 
 ### Services
