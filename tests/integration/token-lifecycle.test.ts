@@ -49,14 +49,14 @@ describe('Token Lifecycle', () => {
 
     // After disconnect, API calls should fail
     await expect(
-      client.get(Service.CORE, 'v4/Me'),
+      client.get(Service.CORE, 'Me'),
     ).rejects.toThrow(ConfigurationError);
 
     // Reconnect with a fresh client
     const client2 = await createAdminClient(env);
     clients.push(client2);
     expect(client2.isConnected).toBe(true);
-    const me = await client2.get<{ Id: number }>(Service.CORE, 'v4/Me');
+    const me = await client2.get<{ Id: number }>(Service.CORE, 'Me');
     expect(me.Id).toBeDefined();
   });
 });

@@ -16,6 +16,8 @@ export interface A2AClientOptions {
   ca?: string | Buffer;
   /** Whether to verify TLS. Default: true. */
   verify?: boolean;
+  /** API version string (default: 'v4'). */
+  apiVersion?: string;
 }
 
 /**
@@ -29,6 +31,7 @@ export class A2AClient {
   readonly #auth: CertificateAuth;
   readonly #ca: string | Buffer | undefined;
   readonly #verify: boolean;
+  readonly #apiVersion: string;
   #httpClient: HttpClient | undefined;
 
   constructor(host: string, options: A2AClientOptions) {
@@ -38,6 +41,7 @@ export class A2AClient {
     this.#auth = options.auth;
     this.#ca = options.ca;
     this.#verify = options.verify !== false;
+    this.#apiVersion = options.apiVersion ?? 'v4';
   }
 
   /** The appliance hostname. */
@@ -73,7 +77,7 @@ export class A2AClient {
    * @param apiKey - The API key for the retrievable account
    */
   async retrievePassword(apiKey: string): Promise<SecretValue> {
-    const body = await this.#a2aRequest(apiKey, 'Credentials', 'Password');
+    const body = await this.#a2aRequest(apiKey, 'GET', 'Credentials', { type: 'Password' });
     return new SecretValue(body);
   }
 
@@ -84,7 +88,10 @@ export class A2AClient {
    */
   async retrievePrivateKey(apiKey: string, format?: SshKeyFormat): Promise<SecretValue> {
     const keyType = format ?? SshKeyFormat.OpenSsh;
-    const body = await this.#a2aRequest(apiKey, 'Credentials', `SshKey?keyFormat=${keyType}`);
+    const body = await this.#a2aRequest(apiKey, 'GET', 'Credentials', {
+      type: 'SshKey',
+      keyFormat: keyType,
+    });
     return new SecretValue(body);
   }
 
@@ -93,7 +100,7 @@ export class A2AClient {
    * @param apiKey - The API key for the retrievable account
    */
   async retrieveApiKeySecret(apiKey: string): Promise<SecretValue> {
-    const body = await this.#a2aRequest(apiKey, 'Credentials', 'ApiKey');
+    const body = await this.#a2aRequest(apiKey, 'GET', 'Credentials', { type: 'ApiKey' });
     return new SecretValue(body);
   }
 
@@ -103,7 +110,7 @@ export class A2AClient {
   async getRetrievableAccounts(): Promise<RetrievableAccount[]> {
     this.#ensureHttpClient();
     const response = await this.#httpClient!.request({
-      url: `https://${this.#host}/service/a2a/v4/A2ARegistrations`,
+      url: `https://${this.#host}/service/a2a/${this.#apiVersion}/A2ARegistrations`,
       method: 'GET',
       headers: {
         Accept: 'application/json',
@@ -125,7 +132,7 @@ export class A2AClient {
   async setPassword(apiKey: string, password: string): Promise<void> {
     this.#ensureHttpClient();
     const response = await this.#httpClient!.request({
-      url: `https://${this.#host}/service/a2a/v4/Credentials/Password`,
+      url: `https://${this.#host}/service/a2a/${this.#apiVersion}/Credentials?type=Password`,
       method: 'PUT',
       headers: {
         Authorization: `A2A ${apiKey}`,
@@ -159,7 +166,7 @@ export class A2AClient {
     if (passphrase) payload['Passphrase'] = passphrase;
 
     const response = await this.#httpClient!.request({
-      url: `https://${this.#host}/service/a2a/v4/Credentials/SshKey`,
+      url: `https://${this.#host}/service/a2a/${this.#apiVersion}/Credentials?type=SshKey`,
       method: 'PUT',
       headers: {
         Authorization: `A2A ${apiKey}`,
@@ -185,7 +192,7 @@ export class A2AClient {
   ): Promise<BrokeredAccessResponse> {
     this.#ensureHttpClient();
     const response = await this.#httpClient!.request({
-      url: `https://${this.#host}/service/a2a/v4/AccessRequests`,
+      url: `https://${this.#host}/service/a2a/${this.#apiVersion}/AccessRequests`,
       method: 'POST',
       headers: {
         Authorization: `A2A ${apiKey}`,
@@ -204,12 +211,22 @@ export class A2AClient {
 
   // ─── Private helpers ────────────────────────────────────────────────
 
-  async #a2aRequest(apiKey: string, ...pathSegments: string[]): Promise<string> {
+  async #a2aRequest(
+    apiKey: string,
+    method: string,
+    endpoint: string,
+    queryParams?: Record<string, string>,
+  ): Promise<string> {
     this.#ensureHttpClient();
-    const path = pathSegments.join('/');
+    let url = `https://${this.#host}/service/a2a/${this.#apiVersion}/${endpoint}`;
+    if (queryParams) {
+      const params = new URLSearchParams(queryParams);
+      url += `?${params.toString()}`;
+    }
+
     const response = await this.#httpClient!.request({
-      url: `https://${this.#host}/service/a2a/v4/${path}`,
-      method: 'GET',
+      url,
+      method,
       headers: {
         Authorization: `A2A ${apiKey}`,
         Accept: 'application/json',

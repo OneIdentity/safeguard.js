@@ -71,11 +71,11 @@ client.setHttpClient(new NodeHttpClient({ rejectUnauthorized: false }));
 await client.connect();
 
 // Convenience verbs (typed)
-const users = await client.get<User[]>(Service.CORE, 'v4/Users');
-const user = await client.post<User>(Service.CORE, 'v4/Users', { json: body });
+const users = await client.get<User[]>(Service.CORE, 'Users');
+const user = await client.post<User>(Service.CORE, 'Users', { json: body });
 
 // Low-level invoke (full control)
-const response = await client.invoke(Service.CORE, HttpMethod.GET, 'v4/Me', {
+const response = await client.invoke(Service.CORE, HttpMethod.GET, 'Me', {
   fullResponse: true,
   signal: controller.signal,
 });
@@ -97,7 +97,7 @@ Pass them as a flat `Record<string, string | number | boolean>`:
 
 ```typescript
 // filter, fields, orderby, page, count — no $ prefix
-const users = await client.get<User[]>(Service.CORE, 'v4/Users', {
+const users = await client.get<User[]>(Service.CORE, 'Users', {
   query: { filter: 'Disabled eq false', fields: 'UserName,Name', orderby: 'UserName' }
 });
 ```
@@ -112,7 +112,7 @@ The SDK passes these verbatim as URL query params. It does NOT transform them.
 
 ```typescript
 try {
-  await client.get(Service.CORE, 'v4/Users/999999');
+  await client.get(Service.CORE, 'Users/999999');
 } catch (err) {
   if (err instanceof NotFoundError) { /* 404 */ }
   if (err instanceof AuthenticationError) { /* 401 — token expired? */ }

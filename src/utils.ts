@@ -44,20 +44,20 @@ export function validateHost(host: string): string {
  *
  * @example
  * buildServiceUrl('appliance.example.com', Service.CORE)
- * // => 'https://appliance.example.com/service/core'
+ * // => 'https://appliance.example.com/service/core/v4'
  */
-export function buildServiceUrl(host: string, service: Service): string {
+export function buildServiceUrl(host: string, service: Service, apiVersion: string = 'v4'): string {
   if (service === Service.RSTS) {
     return `https://${host}/RSTS`;
   }
-  return `https://${host}/service/${service}`;
+  return `https://${host}/service/${service}/${apiVersion}`;
 }
 
 /**
  * Builds a full API URL including path and optional query parameters.
  *
  * @example
- * buildRequestUrl('appliance.example.com', Service.CORE, 'v4/Users', { filter: 'Name eq "admin"' })
+ * buildRequestUrl('appliance.example.com', Service.CORE, 'Users', { filter: 'Name eq "admin"' })
  * // => 'https://appliance.example.com/service/core/v4/Users?filter=Name+eq+%22admin%22'
  */
 export function buildRequestUrl(
@@ -65,8 +65,9 @@ export function buildRequestUrl(
   service: Service,
   relativeUrl: string,
   query?: Record<string, string | number | boolean>,
+  apiVersion: string = 'v4',
 ): string {
-  const base = buildServiceUrl(host, service);
+  const base = buildServiceUrl(host, service, apiVersion);
   const path = relativeUrl.startsWith('/') ? relativeUrl.slice(1) : relativeUrl;
   const url = new URL(`${base}/${path}`);
 

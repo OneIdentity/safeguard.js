@@ -32,11 +32,11 @@ describe('Query Parameters', () => {
   it('supports limit to restrict results', async () => {
     const allUsers = await client.get<Array<{ Id: number }>>(
       Service.CORE,
-      'v4/Users',
+      'Users',
     );
     const limited = await client.get<Array<{ Id: number }>>(
       Service.CORE,
-      'v4/Users',
+      'Users',
       { query: { limit: 2 } },
     );
     expect(limited.length).toBe(2);
@@ -46,12 +46,12 @@ describe('Query Parameters', () => {
   it('supports page + limit for pagination', async () => {
     const page0 = await client.get<Array<{ Id: number; Name: string }>>(
       Service.CORE,
-      'v4/Users',
+      'Users',
       { query: { page: 0, limit: 2 } },
     );
     const page1 = await client.get<Array<{ Id: number; Name: string }>>(
       Service.CORE,
-      'v4/Users',
+      'Users',
       { query: { page: 1, limit: 2 } },
     );
     expect(page0.length).toBe(2);
@@ -67,7 +67,7 @@ describe('Query Parameters', () => {
   it('supports orderby ascending', async () => {
     const ascending = await client.get<Array<{ Name: string }>>(
       Service.CORE,
-      'v4/Users',
+      'Users',
       { query: { orderby: 'Name' } },
     );
     // Verify sorted ascending (case-insensitive)
@@ -80,7 +80,7 @@ describe('Query Parameters', () => {
   it('supports orderby descending with minus prefix', async () => {
     const descending = await client.get<Array<{ Name: string }>>(
       Service.CORE,
-      'v4/Users',
+      'Users',
       { query: { orderby: '-Name' } },
     );
     // Verify sorted descending (case-insensitive)
@@ -93,7 +93,7 @@ describe('Query Parameters', () => {
   it('supports fields to select specific properties', async () => {
     const sparse = await client.get<Array<Record<string, unknown>>>(
       Service.CORE,
-      'v4/Users',
+      'Users',
       { query: { limit: 1, fields: 'Id,Name' } },
     );
     const keys = Object.keys(sparse[0]!);
@@ -106,7 +106,7 @@ describe('Query Parameters', () => {
   it('combines limit + orderby', async () => {
     const topDesc = await client.get<Array<{ Name: string }>>(
       Service.CORE,
-      'v4/Users',
+      'Users',
       { query: { limit: 2, orderby: '-Name' } },
     );
     expect(topDesc.length).toBe(2);

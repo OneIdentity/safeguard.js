@@ -19,7 +19,7 @@ async function main() {
   await client.connect();
   console.log('Connected via certificate!');
 
-  const me = await client.get<{ DisplayName: string }>(Service.CORE, 'v4/Me');
+  const me = await client.get<{ DisplayName: string }>(Service.CORE, 'Me');
   console.log('Authenticated as:', me.DisplayName);
 
   await client.disconnect();

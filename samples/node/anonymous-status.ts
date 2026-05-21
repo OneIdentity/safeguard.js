@@ -16,7 +16,7 @@ async function main() {
 
   await client.connect();
 
-  const status = await client.get(Service.NOTIFICATION, 'v4/Status');
+  const status = await client.get(Service.NOTIFICATION, 'Status');
   console.log('Appliance status:', JSON.stringify(status, null, 2));
 
   await client.disconnect();

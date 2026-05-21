@@ -156,18 +156,19 @@ let parsed = JSON.parse(result);
 
 ```typescript
 // v8.0 — response is already parsed
-const users = await client.get(Service.CORE, 'v4/Users');
+// Pass relative paths only — the SDK prepends the API version automatically.
+const users = await client.get(Service.CORE, 'Users');
 
 // POST
-const newUser = await client.post(Service.CORE, 'v4/Users', {
+const newUser = await client.post(Service.CORE, 'Users', {
   json: { Name: 'myuser', PrimaryAuthenticationProvider: { Id: -1 } },
 });
 
 // PUT
-await client.put(Service.CORE, `v4/Users/${id}/Password`, { json: 'NewPass123' });
+await client.put(Service.CORE, `Users/${id}/Password`, { json: 'NewPass123' });
 
 // DELETE
-await client.delete(Service.CORE, `v4/Users/${id}`);
+await client.delete(Service.CORE, `Users/${id}`);
 ```
 
 ### Service Enum
@@ -197,7 +198,7 @@ let result = await connection.invoke(SafeguardJs.Services.CORE, SafeguardJs.Http
 
 ```typescript
 // v8.0 — structured query object
-const users = await client.get(Service.CORE, 'v4/Users', {
+const users = await client.get(Service.CORE, 'Users', {
   query: { filter: "Name eq 'Admin'", fields: 'Id,Name' },
 });
 ```
@@ -319,7 +320,7 @@ try {
 import { ApiError, AuthenticationError, NotFoundError } from '@oneidentity/safeguard';
 
 try {
-  await client.get(Service.CORE, 'v4/Users/999999');
+  await client.get(Service.CORE, 'Users/999999');
 } catch (e) {
   if (e instanceof NotFoundError) {
     console.log('User not found');

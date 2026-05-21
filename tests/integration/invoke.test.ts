@@ -33,7 +33,7 @@ describe('API Invocation', () => {
     it('reads current user (Me)', async () => {
       const me = await client.get<{ Id: number; Name: string; AdminRoles: string[] }>(
         Service.CORE,
-        'v4/Me',
+        'Me',
       );
       // Bootstrap admin has Id -2
       expect(me.Id).toBeDefined();
@@ -44,7 +44,7 @@ describe('API Invocation', () => {
     it('lists users with query parameters', async () => {
       const users = await client.get<Array<{ Id: number; Name: string }>>(
         Service.CORE,
-        'v4/Users',
+        'Users',
         { query: { filter: `Name eq '${env.username.toLowerCase()}'` } },
       );
       expect(users.length).toBeGreaterThanOrEqual(1);
@@ -53,7 +53,7 @@ describe('API Invocation', () => {
     it('reads appliance status', async () => {
       const status = await client.get<{ ApplianceCurrentState: string }>(
         Service.NOTIFICATION,
-        'v4/Status',
+        'Status',
       );
       expect(status.ApplianceCurrentState).toBe('Online');
     });
@@ -61,7 +61,7 @@ describe('API Invocation', () => {
     it('lists authentication providers', async () => {
       const providers = await client.get<Array<{ Id: number; Name: string }>>(
         Service.CORE,
-        'v4/AuthenticationProviders',
+        'AuthenticationProviders',
       );
       expect(providers.length).toBeGreaterThanOrEqual(1);
       const local = providers.find((p) => p.Name === 'Local');
@@ -71,7 +71,7 @@ describe('API Invocation', () => {
     it('reads settings', async () => {
       const settings = await client.get<Array<{ Name: string; Value: string }>>(
         Service.CORE,
-        'v4/Settings',
+        'Settings',
       );
       expect(settings.length).toBeGreaterThan(0);
       expect(settings[0]!.Name).toBeTruthy();
@@ -85,7 +85,7 @@ describe('API Invocation', () => {
     it('creates a user (POST)', async () => {
       const user = await client.post<{ Id: number; Name: string }>(
         Service.CORE,
-        'v4/Users',
+        'Users',
         {
           json: {
             Name: userName,
@@ -100,7 +100,7 @@ describe('API Invocation', () => {
       cleanup.register(async () => {
         if (userId) {
           try {
-            await client.delete(Service.CORE, `v4/Users/${userId}`);
+            await client.delete(Service.CORE, `Users/${userId}`);
           } catch { /* best effort */ }
         }
       });
@@ -110,7 +110,7 @@ describe('API Invocation', () => {
       expect(userId).toBeDefined();
       const user = await client.get<{ Id: number; Name: string }>(
         Service.CORE,
-        `v4/Users/${userId}`,
+        `Users/${userId}`,
       );
       expect(user.Id).toBe(userId);
       expect(user.Name).toBe(userName);
@@ -120,7 +120,7 @@ describe('API Invocation', () => {
       expect(userId).toBeDefined();
       const updated = await client.put<{ Id: number; Description: string }>(
         Service.CORE,
-        `v4/Users/${userId}`,
+        `Users/${userId}`,
         {
           json: {
             Id: userId,
@@ -135,10 +135,10 @@ describe('API Invocation', () => {
 
     it('deletes the user (DELETE)', async () => {
       expect(userId).toBeDefined();
-      await client.delete(Service.CORE, `v4/Users/${userId}`);
+      await client.delete(Service.CORE, `Users/${userId}`);
       // Verify it's gone
       await expect(
-        client.get(Service.CORE, `v4/Users/${userId}`),
+        client.get(Service.CORE, `Users/${userId}`),
       ).rejects.toThrow(ApiError);
       userId = undefined; // prevent double-delete in cleanup
     });
@@ -150,7 +150,7 @@ describe('API Invocation', () => {
         data: { Id: number };
         status: number;
         headers: Record<string, string>;
-      }>(Service.CORE, HttpMethod.GET, 'v4/Me', { fullResponse: true });
+      }>(Service.CORE, HttpMethod.GET, 'Me', { fullResponse: true });
       expect(result.status).toBe(200);
       expect(result.headers).toBeDefined();
       expect(result.data).toBeDefined();
@@ -160,13 +160,13 @@ describe('API Invocation', () => {
   describe('error handling', () => {
     it('throws ApiError for 404', async () => {
       await expect(
-        client.get(Service.CORE, 'v4/Users/999999999'),
+        client.get(Service.CORE, 'Users/999999999'),
       ).rejects.toThrow(ApiError);
     });
 
     it('error has status property', async () => {
       try {
-        await client.get(Service.CORE, 'v4/Users/999999999');
+        await client.get(Service.CORE, 'Users/999999999');
         expect.fail('Expected ApiError');
       } catch (err) {
         expect(err).toBeInstanceOf(ApiError);

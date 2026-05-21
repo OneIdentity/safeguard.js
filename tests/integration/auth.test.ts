@@ -41,7 +41,7 @@ describe('Authentication', () => {
       }
       const me = await adminClient.get<{ Id: number; Name: string }>(
         Service.CORE,
-        'v4/Me',
+        'Me',
       );
       expect(me.Id).toBeDefined();
       expect(me.Name).toBeTruthy();

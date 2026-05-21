@@ -34,7 +34,7 @@ describe('Settings Read/Write', () => {
   });
 
   it('reads all settings', async () => {
-    const settings = await client.get<Setting[]>(Service.CORE, 'v4/Settings');
+    const settings = await client.get<Setting[]>(Service.CORE, 'Settings');
     expect(settings.length).toBeGreaterThan(0);
     for (const s of settings) {
       expect(s.Name).toBeTruthy();
@@ -45,7 +45,7 @@ describe('Settings Read/Write', () => {
   it('reads a specific setting by name', async () => {
     const settings = await client.get<Setting[]>(
       Service.CORE,
-      'v4/Settings',
+      'Settings',
       { query: { filter: "Name eq 'Inform User of Bad Password'" } },
     );
     expect(settings.length).toBe(1);
@@ -58,7 +58,7 @@ describe('Settings Read/Write', () => {
     // Read current value
     const settings = await client.get<Setting[]>(
       Service.CORE,
-      'v4/Settings',
+      'Settings',
       { query: { filter: `Name eq '${settingName}'` } },
     );
     const original = settings[0]!;
@@ -66,7 +66,7 @@ describe('Settings Read/Write', () => {
     // PUT targets the specific setting by name in the path
     const updated = await client.put<Setting>(
       Service.CORE,
-      `v4/Settings/${encodeURIComponent(settingName)}`,
+      `Settings/${encodeURIComponent(settingName)}`,
       {
         json: {
           Name: original.Name,
@@ -79,7 +79,7 @@ describe('Settings Read/Write', () => {
   });
 
   it('settings categories include Authentication', async () => {
-    const settings = await client.get<Setting[]>(Service.CORE, 'v4/Settings');
+    const settings = await client.get<Setting[]>(Service.CORE, 'Settings');
     const categories = [...new Set(settings.map((s) => s.Category))];
     expect(categories).toContain('Authentication');
   });
