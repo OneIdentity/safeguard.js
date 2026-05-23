@@ -28,8 +28,8 @@ export {
 export { MemoryStorage, BrowserSessionStorage, StorageKeys } from './storage/index.js';
 export type { StorageProvider } from './storage/index.js';
 
-export { NodeHttpClient, BrowserHttpClient } from './http/index.js';
-export type { HttpClient, HttpRequestOptions, HttpResponse, TlsOptions } from './http/index.js';
+export { NodeHttpClient, BrowserHttpClient, DEFAULT_MAX_RESPONSE_SIZE, MAX_RESPONSE_SIZE_CEILING } from './http/index.js';
+export type { HttpClient, HttpRequestOptions, HttpResponse, TlsOptions, NodeHttpClientOptions } from './http/index.js';
 
 export {
   PasswordAuth,

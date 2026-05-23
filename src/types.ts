@@ -66,4 +66,12 @@ export interface SafeguardClientOptions {
   timeout?: number;
   /** Auto-refresh tokens before expiry. Default: true. */
   autoRefresh?: boolean;
+  /**
+   * Maximum allowed size of a single response body, in bytes (FP-js-002).
+   * Defaults to 10 MB. Hard upper bound is 100 MB. Larger advertised or
+   * streamed responses are rejected with `TransportError` to bound memory
+   * exposure to a hostile / misbehaving appliance. Override on a wired
+   * `NodeHttpClient` if you need different behavior at the HTTP layer.
+   */
+  maxResponseSize?: number;
 }

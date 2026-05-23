@@ -9,6 +9,15 @@ export interface HttpRequestOptions {
   body?: string | Buffer | null;
   signal?: AbortSignal;
   timeout?: number;
+  /**
+   * Maximum allowed size of the response body, in bytes. When omitted the
+   * HTTP client's own default is used (see `NodeHttpClient`). Responses
+   * whose `Content-Length` exceeds this value are rejected before reading
+   * the body; chunked responses are aborted once the streamed byte count
+   * crosses the limit. Added in FP-js-002 to bound memory consumption when
+   * talking to a hostile or misbehaving appliance.
+   */
+  maxResponseSize?: number;
 }
 
 export interface HttpResponse {

@@ -23,6 +23,7 @@ export class SafeguardClient {
   readonly #autoRefresh: boolean;
   readonly #ca: string | Buffer | undefined;
   readonly #verify: boolean;
+  readonly #maxResponseSize: number | undefined;
 
   #httpClient: HttpClient | undefined;
   #storage: StorageProvider;
@@ -39,6 +40,7 @@ export class SafeguardClient {
     this.#autoRefresh = options.autoRefresh !== false;
     this.#ca = options.ca;
     this.#verify = options.verify !== false;
+    this.#maxResponseSize = options.maxResponseSize;
     this.#storage = new MemoryStorage();
   }
 
@@ -192,6 +194,7 @@ export class SafeguardClient {
       timeout: options?.timeout ?? this.#timeout,
     };
     if (options?.signal) requestOpts.signal = options.signal;
+    if (this.#maxResponseSize !== undefined) requestOpts.maxResponseSize = this.#maxResponseSize;
 
     const response = await this.#httpClient.request(requestOpts);
 
