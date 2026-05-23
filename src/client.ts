@@ -29,6 +29,8 @@ export class SafeguardClient {
   #storage: StorageProvider;
   #tokenSet: TokenSet | undefined;
   #connected = false;
+  /** Single-flight refresh promise (FP-js-003). */
+  #tokenRefreshPromise: Promise<void> | undefined;
 
   constructor(host: string, options: SafeguardClientOptions) {
     if (!host) throw new ConfigurationError('SafeguardClient requires a host');
@@ -220,8 +222,19 @@ export class SafeguardClient {
     const elapsed = Date.now() - this.#tokenSet.acquiredAt;
     const expiresInMs = this.#tokenSet.expiresIn * 1000;
 
-    if (elapsed + TOKEN_REFRESH_MARGIN_MS >= expiresInMs) {
-      // Token is expired or about to expire — refresh
+    if (elapsed + TOKEN_REFRESH_MARGIN_MS < expiresInMs) {
+      return; // token still fresh
+    }
+
+    // FP-js-003: single-flight. If a refresh is already running, all
+    // concurrent callers await the same promise so the auth server only
+    // sees one exchange and no two callers race the storage provider.
+    if (this.#tokenRefreshPromise) {
+      await this.#tokenRefreshPromise;
+      return;
+    }
+
+    this.#tokenRefreshPromise = (async (): Promise<void> => {
       if (this.#auth.refreshToken) {
         const refreshed = await this.#auth.refreshToken(this.#host, this.#httpClient!, this.#storage);
         if (refreshed) {
@@ -229,8 +242,15 @@ export class SafeguardClient {
           return;
         }
       }
-      // No refresh support or refresh failed — re-authenticate
       this.#tokenSet = await this.#auth.authenticate(this.#host, this.#httpClient!, this.#storage);
+    })();
+
+    try {
+      await this.#tokenRefreshPromise;
+    } finally {
+      // Always clear the slot — failures must not be cached, otherwise
+      // every subsequent invoke would inherit the same rejection forever.
+      this.#tokenRefreshPromise = undefined;
     }
   }
 }

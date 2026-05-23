@@ -235,4 +235,119 @@ describe('SafeguardClient', () => {
       expect(auth.authenticate).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe('token refresh single-flight (FP-js-003)', () => {
+    it('coalesces concurrent invoke() calls into a single refreshToken call', async () => {
+      let refreshCount = 0;
+      const slowRefresh = vi.fn(async (): Promise<TokenSet> => {
+        refreshCount++;
+        // Simulate a slow refresh so concurrent callers stack up
+        await new Promise((r) => setTimeout(r, 25));
+        return {
+          accessToken: new SecretValue('refreshed-' + String(refreshCount)),
+          expiresIn: 3600,
+          acquiredAt: Date.now(),
+        };
+      });
+      const auth: Auth = {
+        description: 'RefreshAuth',
+        authenticate: vi.fn(async (): Promise<TokenSet> => ({
+          accessToken: new SecretValue('initial'),
+          expiresIn: 3600,
+          acquiredAt: Date.now() - 3550_000, // already near expiry
+        })),
+        refreshToken: slowRefresh,
+      };
+
+      const httpClient = createMockHttpClient('{}');
+      const client = new SafeguardClient('h', { auth, autoRefresh: true });
+      client.setHttpClient(httpClient);
+      await client.connect();
+
+      // Fire 10 concurrent requests; all see the token as expired and must
+      // refresh. With single-flight, refreshToken should be called exactly once.
+      await Promise.all(
+        Array.from({ length: 10 }, () => client.get(Service.CORE, 'v4/Me')),
+      );
+
+      expect(slowRefresh).toHaveBeenCalledTimes(1);
+      expect(refreshCount).toBe(1);
+    });
+
+    it('coalesces concurrent fallback re-authenticate calls when refresh is unsupported', async () => {
+      let authCount = 0;
+      const auth: Auth = {
+        description: 'NoRefreshAuth',
+        authenticate: vi.fn(async (): Promise<TokenSet> => {
+          authCount++;
+          await new Promise((r) => setTimeout(r, 25));
+          // First call (connect) returns near-expiry token; subsequent calls
+          // return a fresh one.
+          if (authCount === 1) {
+            return {
+              accessToken: new SecretValue('initial'),
+              expiresIn: 3600,
+              acquiredAt: Date.now() - 3550_000,
+            };
+          }
+          return {
+            accessToken: new SecretValue('re-auth-' + String(authCount)),
+            expiresIn: 3600,
+            acquiredAt: Date.now(),
+          };
+        }),
+        // no refreshToken — fallback to authenticate()
+      };
+
+      const client = new SafeguardClient('h', { auth, autoRefresh: true });
+      client.setHttpClient(createMockHttpClient('{}'));
+      await client.connect();
+      // After connect, authCount === 1 and token is near-expiry.
+
+      await Promise.all(
+        Array.from({ length: 8 }, () => client.get(Service.CORE, 'v4/Me')),
+      );
+
+      // 1 call for connect + exactly 1 call for the coalesced re-auth = 2.
+      expect(auth.authenticate).toHaveBeenCalledTimes(2);
+    });
+
+    it('propagates refresh failure to all concurrent waiters and clears the in-flight slot', async () => {
+      let calls = 0;
+      const auth: Auth = {
+        description: 'FlakyRefresh',
+        authenticate: vi.fn(async (): Promise<TokenSet> => ({
+          accessToken: new SecretValue('initial'),
+          expiresIn: 3600,
+          acquiredAt: Date.now() - 3550_000,
+        })),
+        refreshToken: vi.fn(async (): Promise<TokenSet> => {
+          calls++;
+          await new Promise((r) => setTimeout(r, 10));
+          throw new Error('refresh blew up');
+        }),
+      };
+
+      const client = new SafeguardClient('h', { auth, autoRefresh: true });
+      client.setHttpClient(createMockHttpClient('{}'));
+      await client.connect();
+
+      const results = await Promise.allSettled(
+        Array.from({ length: 5 }, () => client.get(Service.CORE, 'v4/Me')),
+      );
+
+      // All waiters see the failure; refreshToken called exactly once.
+      expect(calls).toBe(1);
+      for (const r of results) {
+        expect(r.status).toBe('rejected');
+      }
+
+      // A subsequent invocation must retry (in-flight slot was cleared) —
+      // not silently return the cached rejected promise forever.
+      try {
+        await client.get(Service.CORE, 'v4/Me');
+      } catch { /* expected, refreshToken still throws */ }
+      expect(calls).toBe(2);
+    });
+  });
 });

@@ -37,6 +37,8 @@ export class PersistentSafeguardEventListener {
   #manualStop = false;
   #retryCount = 0;
   #retryTimer: ReturnType<typeof setTimeout> | undefined;
+  /** Single-flight token refresh promise (FP-js-003). */
+  #tokenRefreshPromise: Promise<void> | undefined;
 
   constructor(
     connection: HubConnection,
@@ -151,19 +153,11 @@ export class PersistentSafeguardEventListener {
     this.#retryCount++;
 
     try {
-      // Only refresh the token if it's expired or near-expiry
+      // Only refresh the token if it's expired or near-expiry. Single-flight
+      // (FP-js-003) so overlapping reconnect attempts don't double-call
+      // refreshToken or trample the storage provider.
       if (this.#isTokenExpired()) {
-        if (this.#auth.refreshToken) {
-          const refreshed = await this.#auth.refreshToken(this.#host, this.#httpClient, this.#storage);
-          if (refreshed) {
-            this.#tokenSet = refreshed;
-          } else {
-            // Refresh failed — full re-auth
-            this.#tokenSet = await this.#auth.authenticate(this.#host, this.#httpClient, this.#storage);
-          }
-        } else {
-          this.#tokenSet = await this.#auth.authenticate(this.#host, this.#httpClient, this.#storage);
-        }
+        await this.#refreshTokenSingleFlight();
       }
 
       await this.#connection.start();
@@ -172,6 +166,28 @@ export class PersistentSafeguardEventListener {
     } catch {
       // Reconnect failed — try again
       void this.#scheduleReconnect();
+    }
+  }
+
+  async #refreshTokenSingleFlight(): Promise<void> {
+    if (this.#tokenRefreshPromise) {
+      await this.#tokenRefreshPromise;
+      return;
+    }
+    this.#tokenRefreshPromise = (async (): Promise<void> => {
+      if (this.#auth.refreshToken) {
+        const refreshed = await this.#auth.refreshToken(this.#host, this.#httpClient, this.#storage);
+        if (refreshed) {
+          this.#tokenSet = refreshed;
+          return;
+        }
+      }
+      this.#tokenSet = await this.#auth.authenticate(this.#host, this.#httpClient, this.#storage);
+    })();
+    try {
+      await this.#tokenRefreshPromise;
+    } finally {
+      this.#tokenRefreshPromise = undefined;
     }
   }
 
