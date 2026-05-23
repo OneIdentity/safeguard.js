@@ -104,3 +104,77 @@ describe('ApiError.fromResponse', () => {
     expect(err.message).toBe('HTTP 400: Inner detail');
   });
 });
+
+describe('ApiError serialization (toJSON) — FP-js-005', () => {
+  const sensitiveBody = {
+    Message: 'SQL Syntax Error: SELECT * FROM Users WHERE Password=secret',
+    Code: 'INTERNAL_ERROR',
+    StackTrace: 'at SafeguardSrv.DataLayer.UserStore.Get (line 1487)',
+  };
+
+  it('omits body when ApiError is serialized via JSON.stringify', () => {
+    const err = new ApiError('HTTP 500: oops', 500, sensitiveBody);
+    const serialized = JSON.stringify(err);
+    expect(serialized).not.toContain('SQL Syntax Error');
+    expect(serialized).not.toContain('SELECT * FROM Users');
+    expect(serialized).not.toContain('StackTrace');
+    expect(serialized).not.toContain('SafeguardSrv.DataLayer');
+  });
+
+  it('includes safe fields (name, message, status) in serialized output', () => {
+    const err = new ApiError('HTTP 500: oops', 500, sensitiveBody);
+    const parsed = JSON.parse(JSON.stringify(err)) as Record<string, unknown>;
+    expect(parsed.name).toBe('ApiError');
+    expect(parsed.status).toBe(500);
+    expect(parsed.message).toBe('HTTP 500: oops');
+    expect(parsed).not.toHaveProperty('body');
+  });
+
+  it('preserves body for programmatic access', () => {
+    const err = new ApiError('HTTP 500', 500, sensitiveBody);
+    expect(err.body?.Message).toBe(sensitiveBody.Message);
+    expect(err.body?.StackTrace).toBe(sensitiveBody.StackTrace);
+  });
+
+  it('AuthenticationError also omits body when serialized', () => {
+    const err = new AuthenticationError('HTTP 401: bad creds', {
+      Message: 'Invalid password: hunter2',
+    });
+    const serialized = JSON.stringify(err);
+    expect(serialized).not.toContain('hunter2');
+    expect(serialized).not.toContain('Invalid password');
+    const parsed = JSON.parse(serialized) as Record<string, unknown>;
+    expect(parsed.name).toBe('AuthenticationError');
+    expect(parsed.status).toBe(401);
+  });
+
+  it('AuthorizationError also omits body when serialized', () => {
+    const err = new AuthorizationError('HTTP 403', { Message: 'sensitive-detail' });
+    const serialized = JSON.stringify(err);
+    expect(serialized).not.toContain('sensitive-detail');
+    const parsed = JSON.parse(serialized) as Record<string, unknown>;
+    expect(parsed.status).toBe(403);
+  });
+
+  it('NotFoundError also omits body when serialized', () => {
+    const err = new NotFoundError('HTTP 404', { Message: 'leaks/internal/path' });
+    const serialized = JSON.stringify(err);
+    expect(serialized).not.toContain('leaks/internal/path');
+    const parsed = JSON.parse(serialized) as Record<string, unknown>;
+    expect(parsed.status).toBe(404);
+  });
+
+  it('toJSON returns null body field as omitted (no body in output)', () => {
+    const err = new ApiError('HTTP 500', 500, null);
+    const parsed = JSON.parse(JSON.stringify(err)) as Record<string, unknown>;
+    expect(parsed).not.toHaveProperty('body');
+  });
+
+  it('nested ApiError inside another object is also redacted', () => {
+    const err = new ApiError('HTTP 500', 500, sensitiveBody);
+    const wrapper = { context: 'request failed', error: err };
+    const serialized = JSON.stringify(wrapper);
+    expect(serialized).not.toContain('SQL Syntax Error');
+    expect(serialized).not.toContain('StackTrace');
+  });
+});
