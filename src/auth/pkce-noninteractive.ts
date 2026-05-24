@@ -41,9 +41,12 @@ export class PkceNonInteractiveAuth implements Auth {
     const state = generateState();
     const redirectUri = `http://localhost:${String(this.#callbackPort)}/callback`;
 
-    // Start local server to receive callback
+    // Start local server to receive callback.
+    // Bind explicitly to the loopback interface (127.0.0.1) so a co-resident
+    // process on a shared host cannot intercept the authorization code by
+    // racing the legitimate browser callback on the ephemeral port. (FP-js-004)
     const server = createServer();
-    server.listen(this.#callbackPort);
+    server.listen(this.#callbackPort, '127.0.0.1');
 
     const params = new URLSearchParams({
       response_type: 'code',
