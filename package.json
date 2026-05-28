@@ -1,6 +1,6 @@
 {
   "name": "@oneidentity/safeguard",
-  "version": "8.0.1",
+  "version": "8.0.2",
   "description": "One Identity Safeguard JavaScript/TypeScript SDK",
   "type": "module",
   "exports": {
