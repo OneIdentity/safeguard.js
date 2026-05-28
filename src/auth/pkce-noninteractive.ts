@@ -44,7 +44,7 @@ export class PkceNonInteractiveAuth implements Auth {
     // Start local server to receive callback.
     // Bind explicitly to the loopback interface (127.0.0.1) so a co-resident
     // process on a shared host cannot intercept the authorization code by
-    // racing the legitimate browser callback on the ephemeral port. (FP-js-004)
+    // racing the legitimate browser callback on the ephemeral port.
     const server = createServer();
     server.listen(this.#callbackPort, '127.0.0.1');
 

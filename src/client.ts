@@ -23,13 +23,12 @@ export class SafeguardClient {
   readonly #autoRefresh: boolean;
   readonly #ca: string | Buffer | undefined;
   readonly #verify: boolean;
-  readonly #maxResponseSize: number | undefined;
 
   #httpClient: HttpClient | undefined;
   #storage: StorageProvider;
   #tokenSet: TokenSet | undefined;
   #connected = false;
-  /** Single-flight refresh promise (FP-js-003). */
+  /** Single-flight refresh promise to prevent thundering herd on token expiry. */
   #tokenRefreshPromise: Promise<void> | undefined;
 
   constructor(host: string, options: SafeguardClientOptions) {
@@ -42,7 +41,6 @@ export class SafeguardClient {
     this.#autoRefresh = options.autoRefresh !== false;
     this.#ca = options.ca;
     this.#verify = options.verify !== false;
-    this.#maxResponseSize = options.maxResponseSize;
     this.#storage = new MemoryStorage();
   }
 
@@ -196,7 +194,6 @@ export class SafeguardClient {
       timeout: options?.timeout ?? this.#timeout,
     };
     if (options?.signal) requestOpts.signal = options.signal;
-    if (this.#maxResponseSize !== undefined) requestOpts.maxResponseSize = this.#maxResponseSize;
 
     const response = await this.#httpClient.request(requestOpts);
 
@@ -226,9 +223,9 @@ export class SafeguardClient {
       return; // token still fresh
     }
 
-    // FP-js-003: single-flight. If a refresh is already running, all
-    // concurrent callers await the same promise so the auth server only
-    // sees one exchange and no two callers race the storage provider.
+    // Single-flight: if a refresh is already running, all concurrent callers
+    // await the same promise so the auth server only sees one exchange and no
+    // two callers race the storage provider.
     if (this.#tokenRefreshPromise) {
       await this.#tokenRefreshPromise;
       return;

@@ -30,7 +30,7 @@ vi.mock('node:child_process', () => ({
   execFile: vi.fn(),
 }));
 
-describe('PkceNonInteractiveAuth — loopback bind (FP-js-004)', () => {
+describe('PkceNonInteractiveAuth — loopback bind', () => {
   it('binds the callback server to 127.0.0.1 (not 0.0.0.0 / all interfaces)', async () => {
     const auth = new PkceNonInteractiveAuth({ callbackPort: 18400 });
     const httpClient: HttpClient = { request: vi.fn() } as unknown as HttpClient;

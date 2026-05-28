@@ -36,24 +36,6 @@ export class ApiError extends SafeguardError {
   }
 
   /**
-   * Serialization hook (FP-js-005). When `ApiError` (or a subclass) is passed
-   * through `JSON.stringify`, only the safe fields — `name`, `message`,
-   * `status` — are emitted. The raw `body` (which may contain SQL fragments,
-   * stack traces, validation echoes of caller-supplied data, etc.) is
-   * deliberately omitted so that calling `console.error(err)` or forwarding
-   * the error to a structured logger does not silently leak appliance error
-   * detail to a less-trusted sink. The full body remains reachable
-   * programmatically via `err.body` for callers that explicitly want it.
-   */
-  toJSON(): { name: string; message: string; status: number } {
-    return {
-      name: this.name,
-      message: this.message,
-      status: this.status,
-    };
-  }
-
-  /**
    * Creates an appropriate ApiError subclass based on HTTP status code.
    */
   static fromResponse(status: number, body: string | ApiErrorBody | null): ApiError {

@@ -236,7 +236,7 @@ describe('SafeguardClient', () => {
     });
   });
 
-  describe('token refresh single-flight (FP-js-003)', () => {
+  describe('token refresh single-flight', () => {
     it('coalesces concurrent invoke() calls into a single refreshToken call', async () => {
       let refreshCount = 0;
       const slowRefresh = vi.fn(async (): Promise<TokenSet> => {

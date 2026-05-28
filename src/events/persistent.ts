@@ -37,7 +37,7 @@ export class PersistentSafeguardEventListener {
   #manualStop = false;
   #retryCount = 0;
   #retryTimer: ReturnType<typeof setTimeout> | undefined;
-  /** Single-flight token refresh promise (FP-js-003). */
+  /** Single-flight token refresh promise to prevent thundering herd. */
   #tokenRefreshPromise: Promise<void> | undefined;
 
   constructor(
@@ -154,8 +154,8 @@ export class PersistentSafeguardEventListener {
 
     try {
       // Only refresh the token if it's expired or near-expiry. Single-flight
-      // (FP-js-003) so overlapping reconnect attempts don't double-call
-      // refreshToken or trample the storage provider.
+      // so overlapping reconnect attempts don't double-call refreshToken or
+      // trample the storage provider.
       if (this.#isTokenExpired()) {
         await this.#refreshTokenSingleFlight();
       }
