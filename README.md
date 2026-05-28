@@ -331,24 +331,71 @@ const raw: string = tokenSet.accessToken.expose(); // explicit opt-in
 
 ### TLS Verification
 
-TLS certificate verification is **enabled by default** and should never be
-disabled in production. For development environments with self-signed
-certificates:
+TLS certificate verification is **enabled by default** in this SDK. The
+Node-side `NodeHttpClient` constructs an `undici.Agent` with
+`rejectUnauthorized: true`, so connections to an appliance whose certificate
+chain does not validate are refused at the TLS layer.
+
+#### Production: provide a custom CA bundle
+
+The correct way to talk to an appliance whose certificate is issued by a
+private / corporate CA is to provide the CA bundle to the SDK — not to
+disable verification:
+
+```typescript
+import { readFileSync } from 'node:fs';
+import { SafeguardClient, NodeHttpClient, PasswordAuth } from '@oneidentity/safeguard';
+
+const ca = readFileSync('/etc/ssl/corp-root-ca.pem');
+
+const client = new SafeguardClient('safeguard.corp.example', {
+  auth: new PasswordAuth({ /* ... */ }),
+});
+client.setHttpClient(new NodeHttpClient({ ca, rejectUnauthorized: true }));
+await client.connect();
+```
+
+`NodeHttpClient` accepts a PEM string or `Buffer` (single cert or
+concatenated bundle). Verification stays on; only the trust anchor changes.
+
+#### Development / lab appliances (self-signed)
+
+For local appliances with self-signed certificates the supported opt-out is
+the per-instance `rejectUnauthorized: false` flag on the HTTP client:
 
 ```typescript
 // Development only — never use in production
-const client = new SafeguardClient('dev-appliance.local', {
-  auth: new PasswordAuth({ ... }),
-  verify: false,
-});
+client.setHttpClient(new NodeHttpClient({ rejectUnauthorized: false }));
 ```
 
-For production with a custom CA:
+This affects only this `SafeguardClient` instance.
 
-```typescript
-const client = new SafeguardClient('safeguard.corp', { auth });
-client.setHttpClient(new NodeHttpClient({ ca: '/path/to/ca-bundle.pem' }));
-```
+#### The `NODE_TLS_REJECT_UNAUTHORIZED` environment variable
+
+Node.js honours the process-wide
+[`NODE_TLS_REJECT_UNAUTHORIZED=0`](https://nodejs.org/api/cli.html#node_tls_reject_unauthorizedvalue)
+environment variable at the TLS layer below `undici`. If that variable is
+set when your program starts, **all TLS verification in the entire Node
+process is disabled** — including this SDK's connections, and any other
+HTTPS calls your application makes (telemetry, package mirrors, third-party
+APIs, etc.). Node itself prints a one-time warning when the variable is
+honoured.
+
+This SDK deliberately does **not** override or unset this variable: it is a
+documented Node.js mechanism that operators sometimes set intentionally in
+CI or dev shells, and silently re-enabling verification from the library
+would be surprising. But you should be aware that:
+
+- It is **process-wide**, not SDK-specific. Setting it to bypass a lab
+  appliance also exposes every other outbound HTTPS call in the same
+  process.
+- It cannot be re-enabled per-connection from JavaScript once set — even
+  `new NodeHttpClient({ rejectUnauthorized: true })` is overridden by the
+  env var.
+- It must not be set in production. Prefer the custom-CA approach above.
+
+If you find `NODE_TLS_REJECT_UNAUTHORIZED=0` in a deployment environment,
+treat it as a finding to remediate, not as a working configuration.
 
 ### Host Validation
 

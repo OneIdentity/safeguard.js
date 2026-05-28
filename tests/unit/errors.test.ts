@@ -104,3 +104,4 @@ describe('ApiError.fromResponse', () => {
     expect(err.message).toBe('HTTP 400: Inner detail');
   });
 });
+
