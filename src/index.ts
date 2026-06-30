@@ -36,6 +36,7 @@ export {
   CertificateAuth,
   PkceAuth,
   PkceNonInteractiveAuth,
+  DeviceCodeAuth,
   handlePkceCallback,
   TokenAuth,
   AnonymousAuth,
@@ -47,6 +48,8 @@ export type {
   CertificateAuthOptions,
   PkceAuthOptions,
   PkceNonInteractiveAuthOptions,
+  DeviceCodeAuthOptions,
+  DeviceCodeInfo,
   PkceCallbackResult,
   TokenAuthOptions,
 } from './auth/index.js';
