@@ -46,7 +46,7 @@ provides automatic reconnection with token refresh for long-running listeners.
 - **TypeScript-first** with full type declarations
 - **Dual ESM/CJS** — works with `import` and `require()`
 - **Node.js and Browser** support
-- **Multiple auth strategies** — Password, Certificate, PKCE (browser), PKCE Non-Interactive (headless), Token, Anonymous
+- **Multiple auth strategies** — Password, Certificate, PKCE (browser), PKCE Non-Interactive (headless), Device Code (Node + browser), Token, Anonymous
 - **A2A client** — retrieve/set passwords, SSH keys, API key secrets, broker access requests
 - **SignalR events** — one-shot and persistent event listeners with auto-reconnect
 - **Secure by default** — TLS verification enabled, no secrets in memory longer than needed
@@ -120,6 +120,42 @@ await client.connect();
 const me = await client.get(Service.CORE, 'Me');
 await client.disconnect();
 ```
+
+### Device Code Login (Node.js and Browser)
+
+For headless and shared environments — containers, SSH sessions, CI/operator
+consoles — where the SDK cannot open a browser. The SDK requests a device code
+and polls; the user authenticates in their own browser on any device. Your code
+owns all display I/O via the required `onDeviceCode` callback.
+
+This strategy is platform-agnostic and works in both Node.js and the browser.
+
+**Appliance prerequisite:** the Device Code grant must be enabled in Safeguard
+settings (`Settings -> OAuth 2.0 Grant Types`; API Settings/Allowed OAuth2 Grant
+Types must include `DeviceCode`). If disabled, `DeviceCodeAuth` throws a
+`ConfigurationError`.
+
+```typescript
+import { SafeguardClient, DeviceCodeAuth, Service } from '@oneidentity/safeguard';
+
+const abort = new AbortController();
+const client = new SafeguardClient('safeguard.sample.corp', {
+  auth: new DeviceCodeAuth({
+    signal: abort.signal,
+    onDeviceCode: ({ verificationUriComplete, verificationUri, userCode, expiresIn, interval }) => {
+      console.log(`Open: ${verificationUriComplete ?? verificationUri}`);
+      console.log(`Code: ${userCode} (expires in ${expiresIn}s; poll ${interval}s)`);
+    },
+  }),
+});
+
+await client.connect();
+const me = await client.get(Service.CORE, 'Me');
+console.log(me);
+```
+
+In the browser, import from `@oneidentity/safeguard/browser` and render the URL
+and code into the DOM instead of the console. Cancel with `abort.abort()`.
 
 ### Client Certificate Authentication
 
