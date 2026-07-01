@@ -67,7 +67,7 @@ For pipeline flow, version stamping, npm publish, and release details, load [bui
 
 ## Versioning
 
-Do not hand-edit `package.json` version. Release versioning is derived from git tags; `main` builds publish prereleases and `v*` tags publish stable packages.
+The `package.json` version is the **prerelease base**: `main`/branch builds publish `X.Y.Z-pre{buildId}` derived from that field, so bump it (minor for new features, patch for fixes) when the target release changes. Stable releases come from `v*` tags — the tag, not the file, sets the stable number, so never hand-edit the file to force a stable version.
 
 ## On-demand skills
 

@@ -33,6 +33,7 @@ export type { HttpClient, HttpRequestOptions, HttpResponse } from './http/types.
 export {
   PasswordAuth,
   PkceAuth,
+  DeviceCodeAuth,
   handlePkceCallback,
   TokenAuth,
   AnonymousAuth,
@@ -42,6 +43,8 @@ export type {
   TokenSet,
   PasswordAuthOptions,
   PkceAuthOptions,
+  DeviceCodeAuthOptions,
+  DeviceCodeInfo,
   PkceCallbackResult,
   TokenAuthOptions,
 } from './auth/index.js';

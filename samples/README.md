@@ -7,6 +7,7 @@ TypeScript examples demonstrating the `@oneidentity/safeguard` SDK.
 | File | Description |
 |------|-------------|
 | [password-auth.ts](node/password-auth.ts) | Username/password authentication |
+| [device-code-auth.ts](node/device-code-auth.ts) | Device Code (RFC 8628) headless login |
 | [certificate-auth.ts](node/certificate-auth.ts) | Client certificate authentication |
 | [a2a-password.ts](node/a2a-password.ts) | A2A credential retrieval |
 | [signalr-events.ts](node/signalr-events.ts) | Real-time event subscription |
@@ -18,6 +19,7 @@ TypeScript examples demonstrating the `@oneidentity/safeguard` SDK.
 | Directory | Description |
 |-----------|-------------|
 | [pkce-login/](Browser/pkce-login/) | PKCE OAuth login flow |
+| [device-code/](Browser/device-code/) | Device Code (RFC 8628) login flow |
 
 ## Running Node.js Samples
 
