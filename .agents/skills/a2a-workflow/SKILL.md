@@ -261,6 +261,19 @@ Typical causes:
 
 Start by validating the `NodeHttpClient` TLS options and the appliance-side certificate registration.
 
+### `60094 Authorization is denied` on cert/A2A auth against SPP 9.0 (TLS 1.3)
+
+SPP 9.0 enables TLS 1.3, which requires client-certificate auth to complete
+post-handshake — and **Node has no client-side post-handshake auth**
+([nodejs/node#46120](https://github.com/nodejs/node/issues/46120), NOT_PLANNED),
+so the cert is never presented. `NodeHttpClient` handles this by **auto-capping
+cert connections at TLS 1.2** when `cert`/`key`/`pfx` is present and no version
+is pinned, so the default A2A path works on the Standard binding. If you pinned
+`minVersion`/`maxVersion` yourself, you disabled the auto-cap — either drop the
+pin or, for TLS 1.3, target the appliance's **Cert SNI** hostname with
+`minVersion: 'TLSv1.3'`. Never enable HTTP/2 (`allowH2`); it disallows the
+post-handshake `CertificateRequest`.
+
 ### `ApiError` on retrieve, write-back, or brokering
 
 `A2AClient` converts non-success HTTP responses with `ApiError.fromResponse(...)`:

@@ -433,6 +433,98 @@ would be surprising. But you should be aware that:
 If you find `NODE_TLS_REJECT_UNAUTHORIZED=0` in a deployment environment,
 treat it as a finding to remediate, not as a working configuration.
 
+### TLS 1.3 and SPP 9.0
+
+Starting with **SPP 9.0**, the appliance enables **TLS 1.3**. For
+password/token authentication there is **nothing to change** — connections
+negotiate TLS 1.3 automatically. Certificate-based auth needs a little care on
+Node, described below. safeguard.js handles the common case for you by default.
+
+#### The Node limitation: no client-side post-handshake auth
+
+TLS 1.3 moves client-certificate authentication to a **post-handshake**
+exchange (RFC 8446 §4.6.2): the server sends a `CertificateRequest` *after* the
+handshake and the client must answer it. **Node.js does not implement
+client-side post-handshake authentication** — the upstream request
+([nodejs/node#46120](https://github.com/nodejs/node/issues/46120)) was closed
+`NOT_PLANNED`, and `tls.connect` exposes no toggle for it. Over a plain TLS 1.3
+connection the client therefore never presents its certificate, and certificate
+/ A2A auth fails against SPP 9.0 with `60094 Authorization is denied`.
+
+> This differs from PySafeguard, where Python's `ssl` module *can* answer the
+> post-handshake request (`post_handshake_auth = True`). No equivalent exists in
+> Node, so safeguard.js uses TLS-version control instead.
+
+#### What safeguard.js does by default
+
+`NodeHttpClient` accepts opt-in `minVersion` / `maxVersion` TLS pins. When you
+build a client for certificate/A2A auth (i.e. `TlsOptions` carries a
+`cert`/`key` or `pfx`) and you have **not** pinned a version, the connection is
+**automatically capped at TLS 1.2**. That keeps the certificate request
+*in-handshake*, so certificate and A2A auth work out of the box on SPP 9.0's
+Standard binding:
+
+```typescript
+import { SafeguardClient, CertificateAuth, NodeHttpClient } from '@oneidentity/safeguard';
+
+const auth = new CertificateAuth({ certFile: './client.pem', keyFile: './client.key' });
+const client = new SafeguardClient('safeguard.corp.example', { auth });
+
+// cert present + no version pin ⇒ NodeHttpClient caps at TLS 1.2 for you
+client.setHttpClient(new NodeHttpClient(auth.getTlsOptions()));
+await client.connect();
+```
+
+Password/token connections carry no client certificate and continue to
+negotiate up to TLS 1.3.
+
+#### Reaching TLS 1.3 for certificate auth (Cert SNI)
+
+The only way to do **certificate auth over TLS 1.3** from Node is the
+appliance's **Cert SNI** hostname, which requests the client certificate
+*during* the handshake (no post-handshake step). Target that hostname and pin
+`minVersion: 'TLSv1.3'`; pinning a bound explicitly disables the auto-cap:
+
+```typescript
+const client = new SafeguardClient('cert-sni.safeguard.corp.example', { auth });
+client.setHttpClient(
+  new NodeHttpClient({ ...auth.getTlsOptions(), minVersion: 'TLSv1.3' }),
+);
+await client.connect();
+```
+
+#### Pinning the TLS version (opt-in)
+
+`NodeHttpClient` accepts `minVersion` and `maxVersion` (`TlsVersion` =
+`'TLSv1.3' | 'TLSv1.2' | 'TLSv1.1' | 'TLSv1'`, default unset = negotiate
+normally):
+
+```typescript
+// Require TLS 1.3 (e.g. to enforce it against SPP 9.0)
+new NodeHttpClient({ minVersion: 'TLSv1.3' });
+
+// Interim: cap the connection at TLS 1.2
+new NodeHttpClient({ maxVersion: 'TLSv1.2' });
+```
+
+The pins govern the client's request transport (all API, token, and A2A
+traffic). Leaving them unset lets Node negotiate the highest mutually supported
+version — the recommended default for password/token auth.
+
+#### Node/JS gotchas
+
+- **No client post-handshake auth.** There is no way to present a client
+  certificate on a TLS 1.3 connection whose cert request is post-handshake. Use
+  the TLS 1.2 default or the Cert SNI hostname — those are the only two options.
+- **Keep HTTP/1.1 — do not enable HTTP/2.** The post-handshake
+  `CertificateRequest` is disallowed under HTTP/2. undici (and thus
+  `NodeHttpClient`) defaults to HTTP/1.1; do not enable `allowH2`.
+- **The auto-cap only triggers when a client cert is present and no bound is
+  pinned.** Setting `minVersion` *or* `maxVersion` yourself puts you fully in
+  control and disables the TLS 1.2 default.
+- **Use the `TlsVersion` strings**, e.g. `'TLSv1.3'`, not Node's numeric
+  constants.
+
 ### Host Validation
 
 The `SafeguardClient` constructor validates the `host` parameter to prevent
