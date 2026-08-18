@@ -57,8 +57,18 @@ export class NodeHttpClient implements HttpClient {
   readonly #agent: Agent;
 
   constructor(tlsOptions?: TlsOptions) {
+    const hasClientCert = Boolean(
+      tlsOptions?.cert ?? tlsOptions?.key ?? tlsOptions?.pfx,
+    );
     this.#agent = new Agent({
       connect: resolveTlsConnectOptions(tlsOptions),
+      // Pin HTTP/1.1 for client-certificate connections (cert auth and A2A).
+      // The appliance's HTTP/2-capable Standard binding rejects certificate
+      // auth over HTTP/2 with HTTP_1_1_REQUIRED, independent of TLS version.
+      // undici negotiates HTTP/2 via ALPN by default, so disable it whenever a
+      // client certificate is present (see issue #650). Password/token
+      // connections carry no certificate and keep HTTP/2.
+      ...(hasClientCert ? { allowH2: false } : {}),
     });
   }
 
