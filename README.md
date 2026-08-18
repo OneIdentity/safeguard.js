@@ -516,9 +516,13 @@ version — the recommended default for password/token auth.
 - **No client post-handshake auth.** There is no way to present a client
   certificate on a TLS 1.3 connection whose cert request is post-handshake. Use
   the TLS 1.2 default or the Cert SNI hostname — those are the only two options.
-- **Keep HTTP/1.1 — do not enable HTTP/2.** The post-handshake
-  `CertificateRequest` is disallowed under HTTP/2. undici (and thus
-  `NodeHttpClient`) defaults to HTTP/1.1; do not enable `allowH2`.
+- **Keep HTTP/1.1 for certificate auth — do not enable HTTP/2.** The
+  post-handshake `CertificateRequest` is disallowed under HTTP/2, and the
+  appliance's Standard binding rejects certificate auth over HTTP/2 with
+  `HTTP_1_1_REQUIRED`. undici offers HTTP/2 via ALPN by default, so
+  `NodeHttpClient` automatically pins HTTP/1.1 (`allowH2: false`) whenever a
+  client certificate is present; password/token connections keep HTTP/2. Do not
+  force `allowH2` on a certificate connection.
 - **The auto-cap only triggers when a client cert is present and no bound is
   pinned.** Setting `minVersion` *or* `maxVersion` yourself puts you fully in
   control and disables the TLS 1.2 default.
