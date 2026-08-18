@@ -7,7 +7,7 @@ function createAuth(): CertificateAuth {
   return new CertificateAuth({ cert: 'cert-pem', key: 'key-pem' });
 }
 
-function createMockHttpClient(responseBody = 'secret', status = 200): HttpClient {
+function createMockHttpClient(responseBody = '"secret"', status = 200): HttpClient {
   return {
     request: vi.fn(async (): Promise<HttpResponse> => ({
       status,
@@ -57,24 +57,24 @@ describe('A2AClient', () => {
     );
   });
 
-  it('uses the configured api version for discovery', async () => {
+  it('discovers retrievable accounts via the core service', async () => {
     const versionedClient = new A2AClient('appliance.example.com', {
       auth: createAuth(),
       apiVersion: 'v3',
     });
     const versionedHttpClient = createMockHttpClient(
-      JSON.stringify([{ AccountId: 1, ApiKey: 'api-key' }]),
+      JSON.stringify([{ Id: 1 }]),
     );
     versionedClient.setHttpClient(versionedHttpClient);
 
     await versionedClient.getRetrievableAccounts();
     const call = (versionedHttpClient.request as ReturnType<typeof vi.fn>).mock.calls[0]![0];
 
-    expect(call.url).toBe('https://appliance.example.com/service/a2a/v3/A2ARegistrations');
+    expect(call.url).toBe('https://appliance.example.com/service/core/v3/A2ARegistrations');
     expect(call.method).toBe('GET');
   });
 
-  it('sets passwords with the credential type in the query string', async () => {
+  it('sets passwords with the credential type as a path segment', async () => {
     const updateClient = createMockHttpClient('', 204);
     client.setHttpClient(updateClient);
 
@@ -82,7 +82,7 @@ describe('A2AClient', () => {
     const call = (updateClient.request as ReturnType<typeof vi.fn>).mock.calls[0]![0];
 
     expect(call.url).toBe(
-      'https://appliance.example.com/service/a2a/v4/Credentials?type=Password',
+      'https://appliance.example.com/service/a2a/v4/Credentials/Password',
     );
     expect(call.method).toBe('PUT');
     expect(call.body).toBe('"NewPassword123"');
