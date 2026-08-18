@@ -90,6 +90,25 @@ await client.disconnect();
 - `NodeHttpClient({ rejectUnauthorized: false })` disables TLS cert validation
 - `verify: false` on the client is NOT sufficient to skip TLS; the HttpClient controls it
 
+### TLS version pinning (opt-in) and TLS 1.3 / SPP 9.0
+
+`NodeHttpClient` accepts opt-in `minVersion`/`maxVersion`
+(`TlsVersion = 'TLSv1.3' | 'TLSv1.2' | 'TLSv1.1' | 'TLSv1'`, default unset =
+negotiate):
+
+```typescript
+new NodeHttpClient({ minVersion: 'TLSv1.3' });   // require TLS 1.3
+new NodeHttpClient({ maxVersion: 'TLSv1.2' });   // cap at TLS 1.2
+```
+
+For **certificate/A2A auth** against SPP 9.0 (TLS 1.3): Node cannot present a
+client cert via TLS 1.3 post-handshake auth
+([nodejs/node#46120](https://github.com/nodejs/node/issues/46120), NOT_PLANNED).
+So when `TlsOptions` carries a `cert`/`key`/`pfx` and no version is pinned,
+`NodeHttpClient` **auto-caps at TLS 1.2** so cert-auth works by default on the
+Standard binding. To do cert-auth over TLS 1.3, connect to the appliance's
+**Cert SNI** hostname and pass `minVersion: 'TLSv1.3'`. Keep HTTP/1.1.
+
 ## Query Parameters
 
 The SPP API uses its own query parameter names — NOT OData `$`-prefixed params.

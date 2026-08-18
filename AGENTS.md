@@ -65,6 +65,30 @@ For pipeline flow, version stamping, npm publish, and release details, load [bui
 - Prefer in-memory tokens and avoid browser persistence unless the caller explicitly accepts the XSS tradeoff
 - Validate host handling and optional peer dependencies when changing auth, HTTP, or SignalR code
 
+### TLS 1.3 (SPP 9.0)
+
+SPP 9.0 enables TLS 1.3, which moves client-certificate auth to a
+**post-handshake** exchange (RFC 8446 §4.6.2). **Node has no client-side
+post-handshake authentication** ([nodejs/node#46120](https://github.com/nodejs/node/issues/46120),
+closed NOT_PLANNED), so over TLS 1.3 the client never presents its cert and
+cert/A2A auth fails with `60094 Authorization is denied`. This is a Node
+limitation, not the server's — unlike PySafeguard, we cannot just enable PHA.
+
+`TlsOptions` (on `NodeHttpClient`) exposes opt-in `minVersion` / `maxVersion`
+(`TlsVersion`, default unset = negotiate). The version logic lives in
+`resolveTlsConnectOptions()` in `src/http/node.ts`:
+
+- **Cert connections auto-cap at TLS 1.2** when `cert`/`key`/`pfx` is present and
+  neither bound is pinned, so cert/A2A auth works by default on the appliance's
+  Standard binding (cert requested in-handshake). Do not remove this or cert
+  auth breaks on 9.0.
+- **Password/token connections** carry no cert and keep negotiating TLS 1.3.
+- **TLS 1.3 cert-auth** is only reachable via the appliance's **Cert SNI**
+  hostname (in-handshake cert request); target it and pin
+  `minVersion: 'TLSv1.3'`. Pinning either bound disables the auto-cap.
+- Keep undici on HTTP/1.1 (its default); never enable `allowH2` — HTTP/2
+  disallows the post-handshake `CertificateRequest`.
+
 ## Versioning
 
 The `package.json` version is the **prerelease base**: `main`/branch builds publish `X.Y.Z-pre{buildId}` derived from that field, so bump it (minor for new features, patch for fixes) when the target release changes. Stable releases come from `v*` tags — the tag, not the file, sets the stable number, so never hand-edit the file to force a stable version.

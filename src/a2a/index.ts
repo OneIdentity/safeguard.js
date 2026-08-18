@@ -78,7 +78,9 @@ export class A2AClient {
    */
   async retrievePassword(apiKey: string): Promise<SecretValue> {
     const body = await this.#a2aRequest(apiKey, 'GET', 'Credentials', { type: 'Password' });
-    return new SecretValue(body);
+    // The appliance returns the credential as a JSON string (e.g. `"secret"`);
+    // decode it so callers get the raw value, not a quoted string.
+    return new SecretValue(JSON.parse(body) as string);
   }
 
   /**
@@ -92,7 +94,7 @@ export class A2AClient {
       type: 'SshKey',
       keyFormat: keyType,
     });
-    return new SecretValue(body);
+    return new SecretValue(JSON.parse(body) as string);
   }
 
   /**
@@ -106,22 +108,45 @@ export class A2AClient {
 
   /**
    * Get the list of retrievable accounts available to this certificate.
+   *
+   * Retrievable accounts live under the Core service and are authorized by the
+   * client certificate alone (no per-account API key). Enumerate every A2A
+   * registration bound to the certificate, then collect each registration's
+   * retrievable accounts.
    */
   async getRetrievableAccounts(): Promise<RetrievableAccount[]> {
     this.#ensureHttpClient();
-    const response = await this.#httpClient!.request({
-      url: `https://${this.#host}/service/a2a/${this.#apiVersion}/A2ARegistrations`,
+    const regResponse = await this.#httpClient!.request({
+      url: `https://${this.#host}/service/core/${this.#apiVersion}/A2ARegistrations`,
       method: 'GET',
       headers: {
         Accept: 'application/json',
       },
     });
 
-    if (response.status !== 200) {
-      throw ApiError.fromResponse(response.status, response.body);
+    if (regResponse.status !== 200) {
+      throw ApiError.fromResponse(regResponse.status, regResponse.body);
     }
 
-    return JSON.parse(response.body) as RetrievableAccount[];
+    const registrations = JSON.parse(regResponse.body) as Array<{ Id: number }>;
+    const accounts: RetrievableAccount[] = [];
+    for (const reg of registrations) {
+      const acctResponse = await this.#httpClient!.request({
+        url: `https://${this.#host}/service/core/${this.#apiVersion}/A2ARegistrations/${reg.Id}/RetrievableAccounts`,
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+        },
+      });
+
+      if (acctResponse.status !== 200) {
+        throw ApiError.fromResponse(acctResponse.status, acctResponse.body);
+      }
+
+      accounts.push(...(JSON.parse(acctResponse.body) as RetrievableAccount[]));
+    }
+
+    return accounts;
   }
 
   /**
@@ -132,7 +157,7 @@ export class A2AClient {
   async setPassword(apiKey: string, password: string): Promise<void> {
     this.#ensureHttpClient();
     const response = await this.#httpClient!.request({
-      url: `https://${this.#host}/service/a2a/${this.#apiVersion}/Credentials?type=Password`,
+      url: `https://${this.#host}/service/a2a/${this.#apiVersion}/Credentials/Password`,
       method: 'PUT',
       headers: {
         Authorization: `A2A ${apiKey}`,

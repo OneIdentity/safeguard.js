@@ -74,12 +74,26 @@ const agent = new Agent({
     ca: options.ca,           // Custom CA cert
     cert: options.cert,       // Client certificate (mTLS)
     key: options.key,         // Client key
+    pfx: options.pfx,         // Client cert as PFX/PKCS12 (alt to cert+key)
     rejectUnauthorized: options.verify !== false,
+    // minVersion/maxVersion (opt-in). See resolveTlsConnectOptions().
   },
 });
 ```
 
 Per-instance Agent — no global HTTPS agent mutation.
+
+### TLS 1.3 (SPP 9.0) — `resolveTlsConnectOptions()`
+
+`TlsOptions` exposes opt-in `minVersion`/`maxVersion` (`TlsVersion`). The version
+logic in `src/http/node.ts` auto-caps a connection at `'TLSv1.2'` when a client
+cert (`cert`/`key`/`pfx`) is present and neither bound is pinned, because **Node
+has no client-side TLS 1.3 post-handshake auth**
+([nodejs/node#46120](https://github.com/nodejs/node/issues/46120), NOT_PLANNED)
+— otherwise cert/A2A auth fails on 9.0 with `60094`. Password/token connections
+(no cert) still negotiate TLS 1.3. TLS 1.3 cert-auth is only reachable via the
+appliance's **Cert SNI** hostname with `minVersion: 'TLSv1.3'`. Keep HTTP/1.1
+(never enable undici `allowH2`).
 
 ### Browser (native fetch)
 
